@@ -1,0 +1,74 @@
+PREFIX bbcevent:<http://www.bbc.co.uk/ontologies/event/> 
+PREFIX geo-pos:<http://www.w3.org/2003/01/geo/wgs84_pos#> 
+PREFIX bbc:<http://www.bbc.co.uk/ontologies/bbc/> 
+PREFIX time:<http://www.w3.org/2006/time#> 
+PREFIX event:<http://purl.org/NET/c4dm/event.owl#> 
+PREFIX music-ont:<http://purl.org/ontology/mo/> 
+PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX foaf:<http://xmlns.com/foaf/0.1/> 
+PREFIX provenance:<http://www.bbc.co.uk/ontologies/provenance/> 
+PREFIX owl:<http://www.w3.org/2002/07/owl#> 
+PREFIX cms:<http://www.bbc.co.uk/ontologies/cms/> 
+PREFIX news:<http://www.bbc.co.uk/ontologies/news/> 
+PREFIX cnews:<http://www.bbc.co.uk/ontologies/news/cnews/> 
+PREFIX cconcepts:<http://www.bbc.co.uk/ontologies/coreconcepts/> 
+PREFIX dbp-prop:<http://dbpedia.org/property/> 
+PREFIX geonames:<http://sws.geonames.org/> 
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX domain:<http://www.bbc.co.uk/ontologies/domain/> 
+PREFIX dbpedia:<http://dbpedia.org/resource/> 
+PREFIX geo-ont:<http://www.geonames.org/ontology#> 
+PREFIX bbc-pont:<http://purl.org/ontology/po/> 
+PREFIX tagging:<http://www.bbc.co.uk/ontologies/tagging/> 
+PREFIX sport:<http://www.bbc.co.uk/ontologies/sport/> 
+PREFIX skosCore:<http://www.w3.org/2004/02/skos/core#> 
+PREFIX dbp-ont:<http://dbpedia.org/ontology/> 
+PREFIX xsd:<http://www.w3.org/2001/XMLSchema#> 
+PREFIX core:<http://www.bbc.co.uk/ontologies/coreconcepts/> 
+PREFIX curric:<http://www.bbc.co.uk/ontologies/curriculum/> 
+PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
+PREFIX cwork:<http://www.bbc.co.uk/ontologies/creativework/> 
+PREFIX fb:<http://rdf.freebase.com/ns/>
+PREFIX geo:<http://www.w3.org/2003/01/geo/wgs84_pos#>
+PREFIX ldbc:<http://www.ldbc.eu/ontologies/sempub#>
+PREFIX ot:<http://www.ontotext.com/>
+PREFIX : <http://www.ontotext.com/connectors/mongodb#>
+PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>
+
+#  Query name : query7
+#  Query Description : 
+#  Retrieve creative works that have been created within a defined date-time range of one hour.
+#  Additional constraint added the type of creative works created in that time range.
+
+#  Choke Points : 
+#    - Date range query
+#    - Optimizer should be able to split the FILTER conditions into conjunction of conditions and execute them as soon as possible, 
+#      which will limit the amount of intermediate results
+
+select ?creativeWork ?dateCreated ?title ?category ?liveCoverage ?audience {
+    ?search a inst:spb100 ;
+            :find '''{
+  "@graph.@type": "cwork:NewsItem",
+  "@graph.cwork:dateCreated.@date": {
+        "$gt": ISODate('2011-02-15T09:00:17Z'),
+        "$lt": ISODate('2011-02-16T12:14:17Z')
+   }
+}''' ;
+            :project '''{
+  "@graph.@id": 1,
+  "@context": 1,
+  "@graph.cwork:dateCreated": 1,
+  "@graph.cwork:title": 1,
+  "@graph.cwork:category": 1,
+  "@graph.cwork:liveCoverage": 1,
+  "@graph.cwork:audience": 1
+}''';
+            :entity ?entity .
+    graph inst:spb100 {
+        ?creativeWork cwork:dateCreated ?dateCreated .
+        ?creativeWork cwork:title ?title .
+        ?creativeWork cwork:category ?category .
+        ?creativeWork cwork:liveCoverage ?liveCoverage .
+        ?creativeWork cwork:audience ?audience .
+    }
+}

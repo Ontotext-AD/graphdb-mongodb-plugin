@@ -1,0 +1,155 @@
+PREFIX bbcevent:<http://www.bbc.co.uk/ontologies/event/> 
+PREFIX geo-pos:<http://www.w3.org/2003/01/geo/wgs84_pos#> 
+PREFIX bbc:<http://www.bbc.co.uk/ontologies/bbc/> 
+PREFIX time:<http://www.w3.org/2006/time#> 
+PREFIX event:<http://purl.org/NET/c4dm/event.owl#> 
+PREFIX music-ont:<http://purl.org/ontology/mo/> 
+PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX foaf:<http://xmlns.com/foaf/0.1/> 
+PREFIX provenance:<http://www.bbc.co.uk/ontologies/provenance/> 
+PREFIX owl:<http://www.w3.org/2002/07/owl#> 
+PREFIX cms:<http://www.bbc.co.uk/ontologies/cms/> 
+PREFIX news:<http://www.bbc.co.uk/ontologies/news/> 
+PREFIX cnews:<http://www.bbc.co.uk/ontologies/news/cnews/> 
+PREFIX cconcepts:<http://www.bbc.co.uk/ontologies/coreconcepts/> 
+PREFIX dbp-prop:<http://dbpedia.org/property/> 
+PREFIX geonames:<http://sws.geonames.org/> 
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX domain:<http://www.bbc.co.uk/ontologies/domain/> 
+PREFIX dbpedia:<http://dbpedia.org/resource/> 
+PREFIX geo-ont:<http://www.geonames.org/ontology#> 
+PREFIX bbc-pont:<http://purl.org/ontology/po/> 
+PREFIX tagging:<http://www.bbc.co.uk/ontologies/tagging/> 
+PREFIX sport:<http://www.bbc.co.uk/ontologies/sport/> 
+PREFIX skosCore:<http://www.w3.org/2004/02/skos/core#> 
+PREFIX dbp-ont:<http://dbpedia.org/ontology/> 
+PREFIX xsd:<http://www.w3.org/2001/XMLSchema#> 
+PREFIX core:<http://www.bbc.co.uk/ontologies/coreconcepts/> 
+PREFIX curric:<http://www.bbc.co.uk/ontologies/curriculum/> 
+PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
+PREFIX cwork:<http://www.bbc.co.uk/ontologies/creativework/> 
+PREFIX fb:<http://rdf.freebase.com/ns/>
+PREFIX ot:<http://www.ontotext.com/>
+PREFIX : <http://www.ontotext.com/connectors/mongodb#>
+PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>
+
+#  Query name : query9
+#  Query Description :
+#  Retrieve most recent Creative Works related to a particular one, namely such that are tagged with the same concepts
+#  Calculates a score for a particular Creative Work, based on the number of Creative Works that it shares tags with
+#  The different combinations of cwork:about and cwork:mention count with factors between 0.5 and 2
+#  When calculating the score, multiplication of results due to owl:sameAs equivalence should be suppressed
+#  For instance, if only the following two statements are asserted in the repository
+#      <cw1 cwork:tag e1> and <e1 owl:sameAs e2>
+#  The query SELECT (COUNT(*) AS ?cnt) { cw1 cwork:tag ?e } should return 1, instead of 2
+#  Reasoning : rdfs:subPropertyOf reasoning with respect to cwork:tag; owl:sameAs with respect to tags
+
+#  Choke Points :
+#    - Optimizer should consider cardinality of star-shaped sub-queries for choosing the optimal join ordering.
+#    - Optimizer should identify the possibility of asynchronous execution of the  aggregate sub-queries.
+#    - Optimizer should consider the selectivity of the DISTINCT for choosing the right execution plan. The distinct's state
+#      should be shared between threads or should be merged after the top order sort.
+#    - Engines which support optimized handling owl:sameAs reasoning that allows for control of query results expansion
+#       can implement this query in a much simpler and efficient way. The first sub-query may look as follows:
+#         SELECT (COUNT(*) AS ?cnt_2) 
+#         WHERE { 
+#           ?other_cw cwork:about ?oa . 
+#           <CreativeWorkUri> cwork:about ?oa .
+#         }  
+
+SELECT ?other_creativeWork ?dt ((?cnt_2 * 2 + ?cnt_1_5 * 15e-1 + ?cnt_1 + ?cnt_0_5 * 5e-1) AS ?score) 
+#FROM ot:disable-sameAs
+WHERE {
+    {
+        select (group_concat(?aboutStr;
+                separator = '", "') as ?argAbout) (group_concat(?mentionsStr;
+                separator = '", "') as ?argMentions) (concat(str(?argMentions), '", "', str(?argAbout)) as ?argTag)
+        where {
+            {
+                ?search a inst:spb100 ;
+                        :aggregate '''[
+{"$match": {"@graph.@id": "http://www.bbc.co.uk/things/66#id"}},
+]''' ;
+     :entity ?entity.
+                graph inst:spb100 {
+                    ?creativeWork cwork:about ?about .
+                    ?creativeWork cwork:mentions ?mentions .
+                }
+                bind (replace(str(?about), "http://sws.geonames.org/", "geonames:") as ?tmp2)
+                bind (replace(str(?tmp2), "http://dbpedia.org/resource/", "dbpedia:") as ?aboutStr)
+                bind (replace(str(?mentions), "http://sws.geonames.org/", "geonames:") as ?tmp3)
+                bind (replace(str(?tmp3), "http://dbpedia.org/resource/", "dbpedia:") as ?mentionsStr)
+            }
+        }
+    } .
+    {
+        bind (
+            '''
+[{"$facet":{"default":[{"$limit":1},{"$project":{"value":"0"}}],"actual":[{"$match":{"@graph.cwork:$matchTo.@id":{"$in":["$matchFrom"]}}},{"$project":{"collapsed":{"$reduce":{"input":"$@graph.cwork:$matchTo.@id","initialValue":[],"in":{"$concatArrays":[{"$cond":{"if":{"$isArray":"$$value"},"then":"$$value","else":["$$value"]}},{"$cond":{"if":{"$isArray":"$$this"},"then":"$$this","else":["$$this"]}}]}}}}},{"$group":{"_id":"null","abouts":{"$push":"$collapsed"}}},{"$project":{"collapsed":{"$reduce":{"input":"$abouts","initialValue":[],"in":{"$concatArrays":[{"$cond":{"if":{"$isArray":"$$value"},"then":"$$value","else":["$$value"]}},{"$cond":{"if":{"$isArray":"$$this"},"then":"$$this","else":["$$this"]}}]}}}}},{"$project":{"filtered":{"$filter":{"input":"$collapsed","cond":{"$in":["$$this",["$matchFrom"]]}}}}},{"$project":{"value":{"$size":"$filtered"}}}]}},{"$project":{"@id":"_:b","aggregate:count.@value":{"$max":[0,{"$max":"$actual.value"}]}}}]'''
+            as ?template
+        )
+        {
+            bind (replace(str(?template), "\\$matchFrom", ?argAbout) as ?queryTmp0 )
+            bind (replace(str(?queryTmp0), "\\$matchTo", "about") as ?query0 )
+                ?search0 a inst:spb100 ;
+                         :aggregate ?query0 ;
+                         :graph inst:graph0 ;
+                         :entity ?entity0.
+                graph inst:graph0 {
+                    ?s0 <aggregate:count> ?cnt_2 .
+                }
+        }
+        {
+            bind (replace(str(?template), "\\$matchFrom", ?argMentions) as ?queryTmp1 )
+            bind (replace(str(?queryTmp1), "\\$matchTo", "about") as ?query1 )
+                ?search1 a inst:spb100 ;
+                         :aggregate ?query1 ;
+                         :graph inst:graph1 ;
+                         :entity ?entity1.
+                graph inst:graph1 {
+                    ?s1 <aggregate:count> ?cnt_1_5 .
+                }
+        }
+        {
+            bind (replace(str(?template), "\\$matchFrom", ?argAbout) as ?queryTmp2 )
+            bind (replace(str(?queryTmp2), "\\$matchTo", "mentions") as ?query2 )
+                ?search2 a inst:spb100 ;
+                         :aggregate ?query2 ;
+                         :graph inst:graph2 ;
+                         :entity ?entity2.
+                graph inst:graph2 {
+                    ?s2 <aggregate:count> ?cnt_1 .
+                }
+        }
+        {
+            bind (replace(str(?template), "\\$matchFrom", ?argMentions) as ?queryTmp3 )
+            bind (replace(str(?queryTmp3), "\\$matchTo", "mentions") as ?query3 )
+                ?search3 a inst:spb100 ;
+                         :aggregate ?query3 ;
+                         :graph inst:graph3 ;
+                         :entity ?entity3.
+                graph inst:graph3 {
+                    ?s3 <aggregate:count> ?cnt_0_5 .
+                }
+        }
+        {
+            values ?template2 {
+                '''[
+{"$match": {"$or": [{"@graph.cwork:about.@id": {"$in": ["$arg1"]}}, {"@graph.cwork:mentions.@id": {"$in": ["$arg1"]}}]}},
+{"$sort": {"@graph.cwork:dateModified.@date": -1}},
+{"$limit": 10}
+]'''
+            }
+            bind (replace(str(?template2), "\\$arg1", ?argTag) as ?query )
+            {
+                ?search a inst:spb100 ;
+                        :aggregate ?query ;
+                        :graph inst:graph4 ;
+                        :entity ?entity.
+                graph inst:graph4 {
+                    ?other_creativeWork cwork:dateModified ?dt .
+                }
+            }
+        }.
+    }
+}

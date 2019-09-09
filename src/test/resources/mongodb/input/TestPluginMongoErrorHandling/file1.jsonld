@@ -1,0 +1,113 @@
+{
+  "@id" : "http://www.bbc.co.uk/things/1#id",
+  "@type" : "cwork:NewsItem",
+  "bbc:primaryContentOf" : [ {
+    "@id" : "bbcd:1#id",
+    "bbc:webDocumentType" : {
+      "@id" : "bbc:HighWeb"
+    }
+  }, {
+    "@id" : "bbcd:2#id",
+    "bbc:webDocumentType" : {
+      "@id" : "bbc:Mobile"
+    }
+  } ],
+  "cwork:about" : [ {
+    "@id" : "dbpedia:AccessAir"
+  }, {
+    "@id" : "dbpedia:Battle_of_Bristoe_Station"
+  }, {
+    "@id" : "dbpedia:Nicolas_Bricaire_de_la_Dixmerie"
+  }, {
+    "@id" : "dbpedia:Bernard_Roberts"
+  }, {
+    "@id" : "dbpedia:Bartolomé_de_Medina"
+  }, {
+    "@id" : "dbpedia:Don_Bonker"
+  }, {
+    "@id" : "dbpedia:Cornel_Nistorescu"
+  }, {
+    "@id" : "dbpedia:Clete_Roberts"
+  }, {
+    "@id" : "dbpedia:Mark_Palansky"
+  }, {
+    "@id" : "dbpedia:Paul_Green_(taekwondo)"
+  }, {
+    "@id" : "dbpedia:Mostafa_Abdel_Satar"
+  }, {
+    "@id" : "dbpedia:Tommy_O'Connell_(hurler)"
+  }, {
+    "@id" : "dbpedia:Ahmed_Ali_Salaad"
+  } ],
+  "cwork:altText" : "thumbnail atlText for CW http://www.bbc.co.uk/context/1#id",
+  "cwork:audience" : {
+    "@id" : "cwork:NationalAudience"
+  },
+  "cwork:category" : {
+    "@id" : "http://www.bbc.co.uk/category/Company"
+  },
+  "cwork:dateCreated" : {
+    "@type" : "xsd:dateTime",
+    "@value" : "2011-02-15T07:13:29.495+02:00"
+  },
+  "cwork:dateModified" : {
+    "@type" : "xsd:dateTime",
+    "@value" : "2012-02-14T12:43:13.165+02:00"
+  },
+  "cwork:description" : " constipate meant breaking felt glitzier democrat's huskily breeding solicit gargling.",
+  "cwork:liveCoverage" : {
+    "@type" : "xsd:boolean",
+    "@value" : "false"
+  },
+  "cwork:mentions" : {
+    "@id" : "geonames:2862704/"
+  },
+  "cwork:primaryFormat" : [ {
+    "@id" : "cwork:TextualFormat"
+  }, {
+    "@id" : "cwork:InteractiveFormat"
+  } ],
+  "cwork:shortTitle" : " closest subsystem merit rebuking disengagement cerebrums caravans conduction disbelieved might.",
+  "cwork:thumbnail" : {
+    "@id" : "bbct:1361611547"
+  },
+  "cwork:title" : "Beckhoff greatly agitators constructed racquets industry restrain spews pitifully undertone stultification.",
+  "@context" : {
+    "bbcevent" : "http://www.bbc.co.uk/ontologies/event/",
+    "geo-pos" : "http://www.w3.org/2003/01/geo/wgs84_pos#",
+    "bbc" : "http://www.bbc.co.uk/ontologies/bbc/",
+    "time" : "http://www.w3.org/2006/time#",
+    "event" : "http://purl.org/NET/c4dm/event.owl#",
+    "music-ont" : "http://purl.org/ontology/mo/",
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "foaf" : "http://xmlns.com/foaf/0.1/",
+    "provenance" : "http://www.bbc.co.uk/ontologies/provenance/",
+    "owl" : "http://www.w3.org/2002/07/owl#",
+    "cms" : "http://www.bbc.co.uk/ontologies/cms/",
+    "news" : "http://www.bbc.co.uk/ontologies/news/",
+    "cnews" : "http://www.bbc.co.uk/ontologies/news/cnews/",
+    "cconcepts" : "http://www.bbc.co.uk/ontologies/coreconcepts/",
+    "dbp-prop" : "http://dbpedia.org/property/",
+    "geonames" : "http://sws.geonames.org/",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "domain" : "http://www.bbc.co.uk/ontologies/domain/",
+    "dbpedia" : "http://dbpedia.org/resource/",
+    "geo-ont" : "http://www.geonames.org/ontology#",
+    "bbc-pont" : "http://purl.org/ontology/po/",
+    "tagging" : "http://www.bbc.co.uk/ontologies/tagging/",
+    "sport" : "http://www.bbc.co.uk/ontologies/sport/",
+    "skosCore" : "http://www.w3.org/2004/02/skos/core#",
+    "dbp-ont" : "http://dbpedia.org/ontology/",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+    "core" : "http://www.bbc.co.uk/ontologies/coreconcepts/",
+    "curric" : "http://www.bbc.co.uk/ontologies/curriculum/",
+    "skos" : "http://www.w3.org/2004/02/skos/core#",
+    "cwork" : "http://www.bbc.co.uk/ontologies/creativework/",
+    "fb" : "http://rdf.freebase.com/ns/",
+    "ot" : "http://www.ontotext.com/",
+    "ldbcspb" : "http://www.ldbcouncil.org/spb#",
+    "bbcd" : "http://www.bbc.co.uk/document/",
+    "bbcc" : "http://www.bbc.co.uk/context/",
+    "bbct" : "http://www.bbc.co.uk/thumbnail/"
+  }
+}

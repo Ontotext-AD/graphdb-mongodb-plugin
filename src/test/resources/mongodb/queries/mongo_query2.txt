@@ -1,0 +1,98 @@
+PREFIX bbcevent:<http://www.bbc.co.uk/ontologies/event/> 
+PREFIX geo-pos:<http://www.w3.org/2003/01/geo/wgs84_pos#> 
+PREFIX bbc:<http://www.bbc.co.uk/ontologies/bbc/> 
+PREFIX time:<http://www.w3.org/2006/time#> 
+PREFIX event:<http://purl.org/NET/c4dm/event.owl#> 
+PREFIX music-ont:<http://purl.org/ontology/mo/> 
+PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+PREFIX foaf:<http://xmlns.com/foaf/0.1/> 
+PREFIX provenance:<http://www.bbc.co.uk/ontologies/provenance/> 
+PREFIX owl:<http://www.w3.org/2002/07/owl#> 
+PREFIX cms:<http://www.bbc.co.uk/ontologies/cms/> 
+PREFIX news:<http://www.bbc.co.uk/ontologies/news/> 
+PREFIX cnews:<http://www.bbc.co.uk/ontologies/news/cnews/> 
+PREFIX cconcepts:<http://www.bbc.co.uk/ontologies/coreconcepts/> 
+PREFIX dbp-prop:<http://dbpedia.org/property/> 
+PREFIX geonames:<http://sws.geonames.org/> 
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> 
+PREFIX domain:<http://www.bbc.co.uk/ontologies/domain/> 
+PREFIX dbpedia:<http://dbpedia.org/resource/> 
+PREFIX geo-ont:<http://www.geonames.org/ontology#> 
+PREFIX bbc-pont:<http://purl.org/ontology/po/> 
+PREFIX tagging:<http://www.bbc.co.uk/ontologies/tagging/> 
+PREFIX sport:<http://www.bbc.co.uk/ontologies/sport/> 
+PREFIX skosCore:<http://www.w3.org/2004/02/skos/core#> 
+PREFIX dbp-ont:<http://dbpedia.org/ontology/> 
+PREFIX xsd:<http://www.w3.org/2001/XMLSchema#> 
+PREFIX core:<http://www.bbc.co.uk/ontologies/coreconcepts/> 
+PREFIX curric:<http://www.bbc.co.uk/ontologies/curriculum/> 
+PREFIX skos:<http://www.w3.org/2004/02/skos/core#> 
+PREFIX cwork:<http://www.bbc.co.uk/ontologies/creativework/> 
+PREFIX fb:<http://rdf.freebase.com/ns/>
+PREFIX ot:<http://www.ontotext.com/>
+PREFIX ldbcspb:<http://www.ldbcouncil.org/spb#>
+PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>
+PREFIX : <http://www.ontotext.com/connectors/mongodb#>
+
+#  Query name : query2
+#  Query Description : 
+#  Retrieve proeprties of a concrete creative work.
+#  reasoning rdfs:subClassOf, rdf:type
+#  join ordering: cwork:dateModified rdf:type owl:FunctionalProperty
+#  join ordering: cwork:dateCreated rdf:type owl:FunctionalProperty
+
+#  optimization: ?creativeWork a ?type . ?type rdfs:subClassOf cwork:CreativeWork 
+#  should be eliminated since ?creativeWork a cwork:CreativeWork 
+
+#  Choke Points : 
+#    - join ordering based on cardinality of functional proerties cwork:dateCreated, cwork:dateModified
+#      Optimizer should use an efficient cost evaluation method for choosing the optimal join tree
+#    - OPTIONAL clauses (treated by query optimizer as nested sub-queries)
+#      Optimizer should recognize that FILTER condition contains variables which are part of the OPTINAL clauses
+#      and unlike query1 to start execution of OPTIONAL clause as soon as possible thus eliminating the intermediate results.
+#    - query optimizer has the chance to recognize the triple pattern : ?creativeWork a ?type . ?type rdfs:subClassOf cwork:CreativeWork 
+#      and eliminate first triple (?creativeWork a ?type .) since ?creativeWork is a cwork:CreativeWork
+
+CONSTRUCT {
+    ?creativeWork a cwork:CreativeWork ;
+        a ?type ;
+        cwork:title ?title ;
+        cwork:dateCreated ?dateCreated ;
+        cwork:dateModified ?dateModified ;
+        cwork:aboutPrefLabel ?aboutPrefLabel ;
+        bbc:primaryContentOf ?pco .
+    ?pco bbc:webDocumentType ?webDocType .
+}
+FROM ot:disable-sameAs
+WHERE {
+    ?search a inst:spb100 ;
+            :aggregate '''[
+  {
+    "$match": {
+      "@graph.@id": "http://www.bbc.co.uk/things/66#id"
+    }
+  }
+]''' ;
+            :entity ?creativeWork .
+    graph inst:spb100 {
+        ?creativeWork a ?type ;
+                      cwork:title ?title .
+        OPTIONAL {
+            ?creativeWork cwork:dateCreated ?dateCreated .
+        }
+        OPTIONAL {
+            ?creativeWork cwork:dateModified ?dateModified .
+        }
+        OPTIONAL {
+            ?creativeWork bbc:primaryContentOf ?pco .
+            ?pco bbc:webDocumentType ?webDocType .
+        }.
+        OPTIONAL {
+            ?creativeWork cwork:about ?about .
+        }
+    }
+    bind ( if(bound(?about), ?about, "") as ?about_ )
+    OPTIONAL {
+        ?about_ ldbcspb:prefLabel ?aboutPrefLabel .
+    }
+}

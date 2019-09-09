@@ -1,0 +1,9 @@
+{
+  "@id" : "http://www.bbc.co.uk/things/1#id",
+  "http://test%2Ecom": {
+  		"@value": "bla%24%2E"
+  }
+  "%24http://test%2Ecom": {
+    		"@value": "bla$."
+    }
+}
