@@ -195,8 +195,8 @@
 	</distributionManagement>
 
 	<scm>
-		<connection>scm:git:https://github.com/Ontotext-AD/graphdb-mongodb-plugin.git</connection>
-		<developerConnection>scm:git:https://github.com/Ontotext-AD/graphdb-mongodb-plugin.git</developerConnection>
+		<connection>scm:git:git@github.com:Ontotext-AD/graphdb-mongodb-plugin.git</connection>
+		<developerConnection>scm:git:git@github.com:Ontotext-AD/graphdb-mongodb-plugin.git</developerConnection>
 		<url>https://github.com/Ontotext-AD/graphdb-mongodb-plugin</url>
 		<tag>HEAD</tag>
 	</scm>
