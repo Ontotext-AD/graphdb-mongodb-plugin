@@ -22,7 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-public class MongoDBPlugin extends PluginBase implements SystemPlugin, Preprocessor, PatternInterpreter, UpdateInterpreter, PluginTransactionListener {
+public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternInterpreter, UpdateInterpreter, PluginTransactionListener {
 
 	public static final String NAMESPACE = "http://www.ontotext.com/connectors/mongodb#";
 	public static final String NAMESPACE_INST = "http://www.ontotext.com/connectors/mongodb/instance#";
@@ -395,7 +395,7 @@ public class MongoDBPlugin extends PluginBase implements SystemPlugin, Preproces
 	}
 
 	// UpdateInterpreter related code
-	// The plugin listen for 
+	// The plugin listen for
 	@Override
 	public long[] getPredicatesToListenFor() {
 		return new long[]{serviceId, databaseId, collectionId, userId, authDbId, passwordId, dropId};
