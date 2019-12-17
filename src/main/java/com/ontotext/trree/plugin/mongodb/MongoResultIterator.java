@@ -154,20 +154,53 @@ public class MongoResultIterator extends StatementIterator {
 
 		if (interrupted)
 			return;
-
-		String entity;
-		List graph = doc.get("@graph", List.class);
-		if (graph != null && graph.size() > 0) {
-			entity = ((Document) graph.get(0)).getString("@id");
-			if (graph.size() > 1) {
-				plugin.getLogger().warn("Multiple graphs in mongo document. Selecting the first one for entity:  " + entity);
+		
+		String entity = null;
+		if (doc.containsKey("@graph")) {
+			Object item = doc.get("@graph");
+			Document graphDoc = null;
+			if (item != null) {
+				if (item instanceof List) {
+					List listItem = (List)item;
+					if (listItem.get(0) instanceof Document) {
+						graphDoc = (Document)listItem.get(0);
+						entity = graphDoc.getString("@id");
+						if (listItem.size() > 1) {
+							plugin.getLogger().warn("Multiple graphs in mongo document. Selecting the first one for entity:  " + entity);
+						}
+					} else {
+						plugin.getLogger().warn("Value of @graph must be a valid document in mongo document.");
+					}
+				} else if (item instanceof Document) {
+					graphDoc = (Document)item;
+					entity = graphDoc.getString("@id");
+				} else {
+					plugin.getLogger().warn("@graph must be a document or list of documents in mongo document.");
+				}
 			}
-		} else {
+		}
+		if (entity == null){
 			entity = doc.getString("@id");
 		}
-		Resource v;
+		Resource v = null;
 		if (entity != null) {
-			v = plugin.vf.createIRI(entity);
+			try {
+				v = plugin.vf.createIRI(entity);
+			} catch (IllegalArgumentException e) {
+				Document contexts = (Document)doc.get("@context");
+				if (contexts != null) {
+					String base = contexts.getString("@base");
+					if (base != null) {
+						try {
+							v = plugin.vf.createIRI(base, entity);
+						} catch (IllegalArgumentException e2) {
+							// ignore the exception
+						}
+					}
+				}
+				if (v == null)
+					throw e;
+			}
 		} else {
 			v = plugin.vf.createBNode();
 		}

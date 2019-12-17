@@ -1,0 +1,14 @@
+{ 
+   "_id":"5df0a96740c98f8525ea7e06",
+   "paperId":282567056,
+   "sourceUrl":"[\"https://is.tuebingen.mpg.de/people/black?page=2\"]",
+   "resourceUrl":"https://is.tuebingen.mpg.de/people/black?page=2",
+   "resourceType":1,
+   "@id":"paper/282567056",
+   "@context":{ 
+      "@vocab":"http://mag.ontotext.com/ontology#",
+      "@base":"http://mag.ontotext.com/resource/"
+   },
+   "@type":"PaperResource",
+   "relationshipType":1
+}
