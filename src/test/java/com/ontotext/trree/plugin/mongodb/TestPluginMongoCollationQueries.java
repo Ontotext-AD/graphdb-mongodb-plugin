@@ -29,7 +29,7 @@ public class TestPluginMongoCollationQueries extends AbstractMongoBasicTest {
 				+ "\t}\n"
 				+ "}";
 
-		verifyOrderedResult();
+		verifyUnorderedResult();
 	}
 
 	@Test
@@ -84,7 +84,7 @@ public class TestPluginMongoCollationQueries extends AbstractMongoBasicTest {
 				+ "\t}\n"
 				+ "}";
 
-		verifyOrderedResult();
+		verifyUnorderedResult();
 	}
 
 	@Override
