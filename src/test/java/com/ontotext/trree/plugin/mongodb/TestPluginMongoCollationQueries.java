@@ -14,7 +14,7 @@ public class TestPluginMongoCollationQueries extends AbstractMongoBasicTest {
 	}
 
 	@Test
-	public void testAggregationWithCollate() throws Exception {
+	public void testAggregationWithCollationLowStrength() throws Exception {
 		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
 				"PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
 				"select distinct ?entity {\n"
@@ -22,7 +22,7 @@ public class TestPluginMongoCollationQueries extends AbstractMongoBasicTest {
 				+ "            :aggregate '''[\n"
 				+ "{\"$match\": {\"@graph.cwork:about.@id\": \"dbpedia:Jaime_Quesada_Chavarría\"}}\n"
 				+ "]''' ;\n"
-				+ "\t:collate \"{'locale': 'en','numericOrdering': true,'strength': 1 }\" ;"
+				+ "\t:collation \"{'locale': 'en', 'strength': 1 }\" ;"
 				+ "\t:entity ?entity .\n"
 				+ "\tgraph inst:spb100 {\n"
 				+ "\t\t?s ?p ?o .\n"
@@ -33,14 +33,51 @@ public class TestPluginMongoCollationQueries extends AbstractMongoBasicTest {
 	}
 
 	@Test
-	public void testGetResultsByDistinctFieldsWithCollation() throws Exception {
+	public void testAggregationWithCollationDefaultStrength() throws Exception {
+		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
+				"PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
+				"select distinct ?entity {\n"
+				+ "\t?search a inst:spb100 ;\n"
+				+ "            :aggregate '''[\n"
+				+ "{\"$match\": {\"@graph.cwork:about.@id\": \"dbpedia:Jaime_Quesada_Chavarría\"}}\n"
+				+ "]''' ;\n"
+				+ "\t:collation \"{'locale': 'en'}\" ;"
+				+ "\t:entity ?entity .\n"
+				+ "\tgraph inst:spb100 {\n"
+				+ "\t\t?s ?p ?o .\n"
+				+ "\t}\n"
+				+ "}";
+
+		verifyOrderedResult();
+	}
+
+	@Test
+	public void testGetResultsByFieldWithCollationDefaultStrength() throws Exception {
 		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
 				"PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
 				"select distinct ?entity {\n"
 				+ "bind(rdf:type as ?p) . \n"
 				+ "\t?search a inst:spb100 ;\n"
 				+ "\t:find '''{'@graph.cwork:about.@id' : \"dbpedia:Jaime_Quesada_Chavarría\"}''' ;"
-				+ "\t:collate \"{'locale': 'en','numericOrdering': true,'strength': 1 }\" ;"
+				+ "\t:collation \"{'locale': 'en' }\" ;"
+				+ "\t:entity ?entity .\n"
+				+ "\tgraph inst:spb100 {\n"
+				+ "\t\t?s ?p ?o .\n"
+				+ "\t}\n"
+				+ "}";
+
+		verifyOrderedResult();
+	}
+
+	@Test
+	public void testGetResultsByFieldWithCollationLowStrength() throws Exception {
+		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
+				"PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
+				"select distinct ?entity {\n"
+				+ "bind(rdf:type as ?p) . \n"
+				+ "\t?search a inst:spb100 ;\n"
+				+ "\t:find '''{'@graph.cwork:about.@id' : \"dbpedia:Jaime_Quesada_Chavarría\"}''' ;"
+				+ "\t:collation \"{'locale': 'en','strength': 1 }\" ;"
 				+ "\t:entity ?entity .\n"
 				+ "\tgraph inst:spb100 {\n"
 				+ "\t\t?s ?p ?o .\n"

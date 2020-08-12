@@ -42,7 +42,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 	public static final IRI HINT = SimpleValueFactory.getInstance().createIRI(NAMESPACE + "hint");
 	public static final IRI ENTITY = SimpleValueFactory.getInstance().createIRI(NAMESPACE + "entity");
 	public static final IRI GRAPH = SimpleValueFactory.getInstance().createIRI(NAMESPACE + "graph");
-	public static final IRI COLLATION = SimpleValueFactory.getInstance().createIRI(NAMESPACE + "collate");
+	public static final IRI COLLATION = SimpleValueFactory.getInstance().createIRI(NAMESPACE + "collation");
 
 	protected static final String MONGODB_PROPERTIES = "mongodb.properties";
 

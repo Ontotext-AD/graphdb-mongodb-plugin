@@ -198,7 +198,7 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 				assertEquals("Number of results", exp.size(), act.size());
 
 				for (int i = 0; i < act.size(); i++) {
-					assertEquals("Result record is as expected", exp.get(0), act.get(0));
+					assertEquals("Result record is as expected", exp.get(i), act.get(i));
 				}
 			}
 		}
