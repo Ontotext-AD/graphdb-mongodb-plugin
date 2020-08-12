@@ -42,6 +42,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 	public static final IRI HINT = SimpleValueFactory.getInstance().createIRI(NAMESPACE + "hint");
 	public static final IRI ENTITY = SimpleValueFactory.getInstance().createIRI(NAMESPACE + "entity");
 	public static final IRI GRAPH = SimpleValueFactory.getInstance().createIRI(NAMESPACE + "graph");
+	public static final IRI COLLATION = SimpleValueFactory.getInstance().createIRI(NAMESPACE + "collate");
 
 	protected static final String MONGODB_PROPERTIES = "mongodb.properties";
 
@@ -57,6 +58,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 	long entityId = 0;
 	long graphId = 0;
 	long rdf_type = 0;
+	long collationId = 0;
 
 	protected long[] predicateSet;
 
@@ -140,9 +142,11 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 		entityId = entities.put(ENTITY, Scope.SYSTEM);
 		graphId = entities.put(GRAPH, Scope.SYSTEM);
 		rdf_type = entities.resolve(RDF.TYPE);
+		collationId = entities.put(COLLATION, Scope.SYSTEM);
+
 
 		predicateSet = new long[] {serviceId, databaseId, collectionId, userId, passwordId, authDbId, dropId, queryId,
-				projectionId, aggregationId, hintId, entityId, graphId, rdf_type};
+				projectionId, aggregationId, hintId, entityId, graphId, collationId, rdf_type};
 		Arrays.sort(predicateSet);
 	}
 
@@ -168,6 +172,9 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 		}
 		if (predicate == queryId) {
 			return 0.43;
+		}
+		if (predicate == collationId) {
+			return 0.45;
 		}
 		if (predicate == projectionId) {
 			return 0.46;
@@ -330,6 +337,17 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 			MongoResultIterator iter = getIterator(subject, context, ctx);
 			iter.setAggregation(aggregation);
 			return iter.singletonIterator(aggregationId, object);
+		}
+		if (predicate == collationId){
+			if (ctx.iters == null) {
+				getLogger().error("iter not created yet");
+				return StatementIterator.EMPTY;
+			}
+			String collationString = Utils.getString(entities,object);
+
+			MongoResultIterator iter = getIterator(subject, context, ctx);
+			iter.setCollation(collationString);
+			return iter.singletonIterator(collationId, object);
 		}
 		if (predicate == hintId) {
 			String hintString = Utils.getString(entities, object);

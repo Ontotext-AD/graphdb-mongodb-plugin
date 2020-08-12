@@ -2,6 +2,11 @@ package com.ontotext.trree.plugin.mongodb;
 
 import com.mongodb.MongoSecurityException;
 import com.mongodb.client.*;
+import com.mongodb.client.model.Collation;
+import com.mongodb.client.model.CollationAlternate;
+import com.mongodb.client.model.CollationCaseFirst;
+import com.mongodb.client.model.CollationMaxVariable;
+import com.mongodb.client.model.CollationStrength;
 import com.ontotext.trree.sdk.Entities;
 import com.ontotext.trree.sdk.Entities.Scope;
 import com.ontotext.trree.sdk.PluginException;
@@ -26,6 +31,7 @@ public class MongoResultIterator extends StatementIterator {
 	private static final String CUSTOM_NODE = "custom";
 
 	String query, projection, hint, database, collection;
+	Collation collation;
 	List<Document> aggregation = null;
 	long searchSubject;
 	long graphId;
@@ -78,6 +84,9 @@ public class MongoResultIterator extends StatementIterator {
 					if (hint != null) {
 						res.hint(Document.parse(hint));
 					}
+					if (collation != null) {
+						res.collation(collation);
+					}
 					iter = res.iterator();
 				} else {
 					FindIterable<Document> res = cache.getFind(coll, database, collection, Document.parse(query));
@@ -87,6 +96,10 @@ public class MongoResultIterator extends StatementIterator {
 					if (hint != null) {
 						res.hint(Document.parse(hint));
 					}
+					if (collation != null) {
+						res.collation(collation);
+					}
+
 					iter = res.iterator();
 				}
 				initialized = true;
@@ -276,5 +289,51 @@ public class MongoResultIterator extends StatementIterator {
 
 	public void setHint(String hintString) {
 		this.hint = hintString;
+	}
+
+	public void setCollation(String collationString){
+		this.collation = createCollation(collationString);
+	}
+
+	private Collation createCollation(String collationString) {
+		Document doc = Document.parse(collationString);
+		Collation.Builder builder = Collation.builder();
+		builder.locale(doc.getString("locale"));
+
+		if (doc.containsKey("caseLevel")){
+			builder.caseLevel(doc.getBoolean("caseLevel"));
+		}
+
+		if (doc.containsKey("caseFirst")){
+			builder.collationCaseFirst(CollationCaseFirst.fromString(doc.getString("caseFirst")));
+		}
+
+		if (doc.containsKey("strength")){
+			builder.collationStrength(CollationStrength.fromInt(doc.getInteger("strength")));
+		}
+
+		if (doc.containsKey("numericOrdering")) {
+			builder.numericOrdering(doc.getBoolean("numericOrdering"));
+		}
+
+		if (doc.containsKey("alternate")) {
+			builder.collationAlternate(
+					CollationAlternate.fromString(doc.getString("alternate")));
+		}
+
+		if (doc.containsKey("maxVariable")) {
+			builder.collationMaxVariable(
+					CollationMaxVariable.fromString(doc.getString("maxVariable")));
+		}
+
+		if (doc.containsKey("normalization")) {
+			builder.normalization(doc.getBoolean("normalization"));
+		}
+
+		if (doc.containsKey("backwards")) {
+			builder.backwards(doc.getBoolean("backwards"));
+		}
+
+		return builder.build();
 	}
 }
