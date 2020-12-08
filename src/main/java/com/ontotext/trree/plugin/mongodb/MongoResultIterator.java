@@ -13,6 +13,8 @@ import com.ontotext.trree.sdk.PluginException;
 import com.ontotext.trree.sdk.StatementIterator;
 import org.bson.Document;
 import org.bson.codecs.DocumentCodec;
+import org.bson.json.JsonMode;
+import org.bson.json.JsonWriterSettings;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
@@ -223,7 +225,10 @@ public class MongoResultIterator extends StatementIterator {
 		}
 		this.object = id;
 		try {
-			currentRDF = Rio.parse(new StringReader(doc.toJson(new EncoderWrapper(new DocumentCodec()))), "http://base.org", RDFFormat.JSONLD);
+			//Relaxed mode Json conversion is needed for canonical MongoDB v2 Json document values
+			currentRDF = Rio.parse(new StringReader(
+					doc.toJson(JsonWriterSettings.builder().outputMode(JsonMode.RELAXED).build(),
+							new EncoderWrapper(new DocumentCodec()))), "http://base.org", RDFFormat.JSONLD);
 
 			Object customNode = doc.get(CUSTOM_NODE);
 			if (customNode != null && customNode instanceof Document) {

@@ -1,0 +1,95 @@
+{
+  "@graph" : [ {
+    "@id" : "http://www.bbc.co.uk/things/1646461#id",
+    "@type" : "cwork:BlogPost",
+    "bbc:primaryContentOf" : {
+      "@id" : "bbcd:269804#id",
+      "bbcwebDocumentType" : {
+        "@id" : "bbc:HighWeb"
+      }
+    },
+    "cwork:about" : [ {
+      "@id" : "dbpedia:Brasserie_du_Bocq"
+    }, {
+      "@id" : "dbpedia:Luther_H._Story"
+    }, {
+      "@id" : "dbpedia:Larry_Melancon"
+    }, {
+      "@id" : "dbpedia:Deborah_Moore"
+    } ],
+    "cwork:altText" : 2469909754111,
+    "cwork:altText1" : 10.5,
+    "cwork:altText2" : 10,
+    "cwork:altText3" : ["hello", 10],
+    "cwork:audience" : {
+      "@id" : "cwork:InternationalAudience"
+    },
+    "cwork:category" : {
+      "@id" : "http://www.bbc.co.uk/category/Persons"
+    },
+    "cwork:dateCreated" : {
+      "@type" : "xsd:dateTime",
+      "@value" : "2011-08-19T21:57:01.683+03:00"
+    },
+    "cwork:dateModified" : {
+      "@type" : "xsd:dateTime",
+      "@value" : "2011-10-10T06:42:57.436+03:00"
+    },
+    "cwork:description" : " equal jawbreakers kibitzer usurper focusses stooge neighed unwholesome habitations fascinate luau squealer immigrants circa mellower deprivations uncertainty chorales continuation cannonades.",
+    "cwork:liveCoverage" : {
+      "@type" : "xsd:boolean",
+      "@value" : "false"
+    },
+    "cwork:mentions" : {
+      "@id" : "geonames:6356710/"
+    },
+    "cwork:primaryFormat" : {
+      "@id" : "cwork:TextualFormat"
+    },
+    "cwork:shortTitle" : " entertainers follicle refineries begot liposuction downer counters kimonos confused unpopular.",
+    "cwork:thumbnail" : {
+      "@id" : "bbct:544611179"
+    },
+    "cwork:title" : "Dimitrios Gounaris potable roaches arbitrated pica blaspheming hovels stiffly dazzle hirelings appendixes."
+  } ],
+  "@id" : "bbcc:1646461#id",
+  "@context" : {
+    "bbcevent" : "http://www.bbc.co.uk/ontologies/event/",
+    "bbcwebDocumentType" : "http://www.bbc.co.uk/ontologies/bbc/webDocumentType",
+    "geo-pos" : "http://www.w3.org/2003/01/geo/wgs84_pos#",
+    "bbc" : "http://www.bbc.co.uk/ontologies/bbc/",
+    "time" : "http://www.w3.org/2006/time#",
+    "event" : "http://purl.org/NET/c4dm/event.owl#",
+    "music-ont" : "http://purl.org/ontology/mo/",
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "foaf" : "http://xmlns.com/foaf/0.1/",
+    "provenance" : "http://www.bbc.co.uk/ontologies/provenance/",
+    "owl" : "http://www.w3.org/2002/07/owl#",
+    "cms" : "http://www.bbc.co.uk/ontologies/cms/",
+    "news" : "http://www.bbc.co.uk/ontologies/news/",
+    "cnews" : "http://www.bbc.co.uk/ontologies/news/cnews/",
+    "cconcepts" : "http://www.bbc.co.uk/ontologies/coreconcepts/",
+    "dbp-prop" : "http://dbpedia.org/property/",
+    "geonames" : "http://sws.geonames.org/",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "domain" : "http://www.bbc.co.uk/ontologies/domain/",
+    "dbpedia" : "http://dbpedia.org/resource/",
+    "geo-ont" : "http://www.geonames.org/ontology#",
+    "bbc-pont" : "http://purl.org/ontology/po/",
+    "tagging" : "http://www.bbc.co.uk/ontologies/tagging/",
+    "sport" : "http://www.bbc.co.uk/ontologies/sport/",
+    "skosCore" : "http://www.w3.org/2004/02/skos/core#",
+    "dbp-ont" : "http://dbpedia.org/ontology/",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+    "core" : "http://www.bbc.co.uk/ontologies/coreconcepts/",
+    "curric" : "http://www.bbc.co.uk/ontologies/curriculum/",
+    "skos" : "http://www.w3.org/2004/02/skos/core#",
+    "cwork" : "http://www.bbc.co.uk/ontologies/creativework/",
+    "fb" : "http://rdf.freebase.com/ns/",
+    "ot" : "http://www.ontotext.com/",
+    "ldbcspb" : "http://www.ldbcouncil.org/spb#",
+    "bbcd" : "http://www.bbc.co.uk/document/",
+    "bbcc" : "http://www.bbc.co.uk/context/",
+    "bbct" : "http://www.bbc.co.uk/thumbnail/"
+  }
+}
