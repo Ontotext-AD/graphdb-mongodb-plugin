@@ -5,7 +5,7 @@ import org.junit.Test;
 
 import com.ontotext.test.utils.StandardUtils;
 
-public class TestPluginMongoExportTypes extends AbstractMongoBasicTest {
+public class TestPluginMongoExportTypesRelaxed extends AbstractMongoBasicTest {
 
 	@Override
 	protected void loadData() {
@@ -14,7 +14,7 @@ public class TestPluginMongoExportTypes extends AbstractMongoBasicTest {
 	}
 
 	@Test
-	public void testGetResultFromDocumentById_CanonicalLong() throws Exception {
+	public void testGetResultFromDocumentById_Long() throws Exception {
 		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
 				"PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
 				"select ?s ?o {\n"
@@ -30,7 +30,7 @@ public class TestPluginMongoExportTypes extends AbstractMongoBasicTest {
 	}
 
 	@Test
-	public void testGetResultFromDocumentById_CanonicalDouble() throws Exception {
+	public void testGetResultFromDocumentById_Double() throws Exception {
 		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
 				"PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
 				"select ?s ?o {\n"
@@ -46,7 +46,7 @@ public class TestPluginMongoExportTypes extends AbstractMongoBasicTest {
 	}
 
 	@Test
-	public void testGetResultFromDocumentById_CanonicalInt() throws Exception {
+	public void testGetResultFromDocumentById_Int() throws Exception {
 		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
 				"PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
 				"select ?s ?o {\n"
@@ -62,7 +62,7 @@ public class TestPluginMongoExportTypes extends AbstractMongoBasicTest {
 	}
 
 	@Test
-	public void testGetResultFromDocumentById_CanonicalArray() throws Exception {
+	public void testGetResultFromDocumentById_Array() throws Exception {
 		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
 				"PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
 				"select ?s ?o {\n"
