@@ -1,2 +1,2 @@
-[p=$http://test.com;s=http://www.bbc.co.uk/things/1#id;o="bla$."]
-[p=http://test.com;s=http://www.bbc.co.uk/things/1#id;o="bla%24%2E"]
+[s=http://www.bbc.co.uk/things/1#id;p=$http://test.com;o="bla$."]
+[s=http://www.bbc.co.uk/things/1#id;p=http://test.com;o="bla%24%2E"]
