@@ -45,9 +45,10 @@ public class TestPluginMongoErrorHandling extends AbstractMongoBasicTest {
 	private void expectException(Class<? extends Exception> exceptionClass, String expectedMessage) {
 		Throwable thrown = null;
 		try (RepositoryConnection conn = getRepository().getConnection()) {
-			TupleQueryResult res = conn.prepareTupleQuery(query).evaluate();
-			if (res.hasNext()) {
-				res.next();
+			try (TupleQueryResult res = conn.prepareTupleQuery(query).evaluate()) {
+				if (res.hasNext()) {
+					res.next();
+				}
 			}
 		} catch (Exception e) {
 			thrown = e;

@@ -180,8 +180,9 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 			File writeTo = isLearnMode() ? resultFile : actualFile;
 			try (OutputStream os = new FileOutputStream(writeTo)) {
 				while (iter.hasNext()) {
-					Object bs = iter.next();
-					os.write(bs.toString().getBytes());
+					String bs = iter.next().toString()
+							.replace("^^<http://www.w3.org/2001/XMLSchema#string>", "");
+					os.write(bs.getBytes());
 					os.write("\n".getBytes());
 				}
 			}
