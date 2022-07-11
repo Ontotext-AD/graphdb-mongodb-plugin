@@ -123,6 +123,10 @@ public class MongoResultIterator extends StatementIterator {
 		client = null;
 
 		interrupted = true;
+		if (currentRDF != null) {
+			currentRDF.clear();
+			currentRDF = null;
+		}
 	}
 
 	public void setQuery(String query) {
