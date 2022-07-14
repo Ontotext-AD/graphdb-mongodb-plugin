@@ -4,6 +4,7 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
+import com.ontotext.graphdb.Config;
 import com.ontotext.test.TemporaryLocalFolder;
 import org.bson.BsonArray;
 import org.bson.BsonValue;
@@ -14,9 +15,7 @@ import org.eclipse.rdf4j.query.GraphQuery;
 import org.eclipse.rdf4j.query.QueryResult;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
+import org.junit.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -66,7 +65,7 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 		}
 	}
 	protected static Path RESULTS_DIR;
-	static { 
+	static {
 		try {
 			RESULTS_DIR = Paths.get(Thread.currentThread().getContextClassLoader().getResource("mongodb/results").toURI());
 		} catch (URISyntaxException e) {
@@ -94,6 +93,18 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 	}
 
 	protected abstract void loadData();
+
+	@BeforeClass
+	public static void setWorkDir() {
+		System.setProperty("graphdb.home.work", String.valueOf(tmp.getRoot()));
+		Config.reset();
+	}
+
+	@AfterClass
+	public static void resetWorkDir() {
+		System.clearProperty("graphdb.home.work");
+		Config.reset();
+	}
 
 	@Before
 	public void setup() {
