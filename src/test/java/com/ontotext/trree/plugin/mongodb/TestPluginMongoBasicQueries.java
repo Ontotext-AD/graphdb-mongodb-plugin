@@ -81,6 +81,22 @@ public class TestPluginMongoBasicQueries extends AbstractMongoBasicTest {
 
 		verifyUnorderedResult();
 	}
+	@Test
+	public void testGetSomeResultsFromQueryButNotNPE(){
+
+		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
+				"PREFIX mongodb-index: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
+				"select * {\n"
+				+ "\t?search a mongodb-index:spb100 ;\n"
+				+ "\t:find \"{'@id' : 'bbcc:1646461#id'}\" ;"
+				+ "\t:entity ?entity .\n"
+				+ "\tgraph mongodb-index:spb100 {\n"
+				+ "\t\t?s <http://www.bbc.co.uk/ontologies/creativework/about> ?o .\n"
+				+ "\t}\n"
+				+ "}";
+
+		verifyResultsCount(query, 4);
+	}
 
 	@Override
 	protected boolean isLearnMode() {
