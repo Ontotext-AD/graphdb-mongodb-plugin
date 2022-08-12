@@ -98,6 +98,15 @@ public class TestPluginMongoBasicQueries extends AbstractMongoBasicTest {
 		verifyResultsCount(query, 4);
 	}
 
+	@Test
+	public void testGetSomeResultsFromQueryButNotNPEWithOtherQuery(){
+
+		query = "PREFIX mongodb-index:<http://www.ontotext.com/connectors/mongodb/instance#>"
+				+ "SELECT * WHERE {GRAPH mongodb-index:metadata_audit {?s ?p1 ?o1}}";
+
+		verifyResultsCount(query, 0);
+	}
+
 	@Override
 	protected boolean isLearnMode() {
 		return false;
