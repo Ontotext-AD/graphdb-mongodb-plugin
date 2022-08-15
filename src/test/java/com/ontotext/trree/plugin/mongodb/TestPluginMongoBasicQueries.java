@@ -85,8 +85,8 @@ public class TestPluginMongoBasicQueries extends AbstractMongoBasicTest {
 	@Test
 	public void testGetSomeResultsFromQueryButNotNPEWithOtherQuery(){
 
-		query = "PREFIX mongodb-index:<http://www.ontotext.com/connectors/mongodb/instance#>"
-				+ "SELECT * WHERE {GRAPH mongodb-index:metadata_audit {?s ?p1 ?o1}}";
+		query = "PREFIX mongodb-index: <http://www.ontotext.com/connectors/mongodb/instance#>"
+		+ "SELECT * WHERE {GRAPH mongodb-index:metadata_audit {?s ?p1 ?o1}}";
 
 		verifyResultsCount(query, 0);
 	}
@@ -94,16 +94,16 @@ public class TestPluginMongoBasicQueries extends AbstractMongoBasicTest {
 	@Test
 	public void testGetSomeResultsFromQueryButNotNPEWithOtherQuery2(){
 
-		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
-				"PREFIX mongodb-index:<http://www.ontotext.com/connectors/mongodb/instance#>"
+		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>"
+				+ "PREFIX mongodb-index:<http://www.ontotext.com/connectors/mongodb/instance#>"
 				+ "SELECT * WHERE {"
-				+ "\t?search a mongodb-index:spb100 ;\n"
-				+ "\t:find \"{'@id' : 'bbcc:1646461#id'}\" ;"
-				+ "\t:entity ?entity .\n"
 				+ "GRAPH mongodb-index:spb100 {?s a ?o1}"
+				+ "?search a mongodb-index:spb100 ;"
+				+ ":find \"{'@id' : 'bbcc:1646461#id'}\" ;"
+				+ ":entity ?entity ."
 				+ "}";
 
-		verifyResultsCount(query, 1);
+		verifyResultsCount(query, 0);
 	}
 
 	@Override
