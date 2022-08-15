@@ -81,22 +81,6 @@ public class TestPluginMongoBasicQueries extends AbstractMongoBasicTest {
 
 		verifyUnorderedResult();
 	}
-	@Test
-	public void testGetSomeResultsFromQueryButNotNPE(){
-
-		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
-				"PREFIX mongodb-index: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
-				"select * {\n"
-				+ "\t?search a mongodb-index:spb100 ;\n"
-				+ "\t:find \"{'@id' : 'bbcc:1646461#id'}\" ;"
-				+ "\t:entity ?entity .\n"
-				+ "\tgraph mongodb-index:spb100 {\n"
-				+ "\t\t?s <http://www.bbc.co.uk/ontologies/creativework/about> ?o .\n"
-				+ "\t}\n"
-				+ "}";
-
-		verifyResultsCount(query, 4);
-	}
 
 	@Test
 	public void testGetSomeResultsFromQueryButNotNPEWithOtherQuery(){
@@ -110,10 +94,16 @@ public class TestPluginMongoBasicQueries extends AbstractMongoBasicTest {
 	@Test
 	public void testGetSomeResultsFromQueryButNotNPEWithOtherQuery2(){
 
-		query = "PREFIX mongodb-index:<http://www.ontotext.com/connectors/mongodb/instance#>"
-				+ "SELECT * WHERE {GRAPH mongodb-index:spb100 {?s ?p1 ?o1}}";
+		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
+				"PREFIX mongodb-index:<http://www.ontotext.com/connectors/mongodb/instance#>"
+				+ "SELECT * WHERE {"
+				+ "\t?search a mongodb-index:spb100 ;\n"
+				+ "\t:find \"{'@id' : 'bbcc:1646461#id'}\" ;"
+				+ "\t:entity ?entity .\n"
+				+ "GRAPH mongodb-index:spb100 {?s a ?o1}"
+				+ "}";
 
-		verifyResultsCount(query, 0);
+		verifyResultsCount(query, 1);
 	}
 
 	@Override
