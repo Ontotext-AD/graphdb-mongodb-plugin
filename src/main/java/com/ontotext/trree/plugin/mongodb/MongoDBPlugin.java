@@ -394,7 +394,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 					ctx.searchBNode = id;
 					ctx.addContext(context);
 
-					ctx.iters.add((MongoResultIterator) createMainIterator(connectString, database, collection, mongoCredential, ctx));
+					ctx.addIterator((MongoResultIterator) createMainIterator(connectString, database, collection, mongoCredential, ctx));
 				}
 
 			}
