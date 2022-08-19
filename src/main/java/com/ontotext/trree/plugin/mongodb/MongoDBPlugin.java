@@ -73,7 +73,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 	 */
 	static class ContextImpl implements RequestContext {
 		RequestCache cache = new RequestCache();
-		HashMap<String, Object> map = new HashMap<String, Object>();
+		Map<String, Object> map = new HashMap<>();
 		Request request;
 		LinkedList<MongoResultIterator> iters;
 		Set<Long> contexts = new HashSet<>();
@@ -236,17 +236,6 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 			if (suffix == null)
 				return null;
 			if (ctx.iters != null) {
-				for (MongoResultIterator it : ctx.iters) {
-					if (it instanceof LazyMongoResultIterator
-									&& !((LazyMongoResultIterator) it).isCreated()) {
-						// we cannot return lazy iterator that is not initialized as the initialization
-						// should happen down this branch
-						continue;
-					}
-					if (it.getSearchSubject() == subject && !it.isQuerySet()) {
-						return it;
-					}
-				}
 				// we can have an iterator that is created by a graph pattern put before the query itself
 				// this way we can match the graph id of that iterator by the current plugin
 				for (MongoResultIterator it : ctx.iters) {
