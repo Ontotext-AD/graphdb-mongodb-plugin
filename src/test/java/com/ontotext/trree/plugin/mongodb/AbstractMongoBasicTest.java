@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
+import java.nio.charset.MalformedInputException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,11 +30,13 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Convenient test case for the scenario: upload date to mongo, query it, verify the result.
@@ -178,36 +182,35 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 	protected void verifyResult(String query, File resultFile, boolean ordered) throws Exception {
 		try (RepositoryConnection conn = getRepository().getConnection()) {
 
-			File actualFile = tmpFolder.newFile(resultFile.getName() + "_actual");
+      QueryResult iter;
 
-			QueryResult iter;
+      if (conn.prepareQuery(query) instanceof GraphQuery) {
+        iter = conn.prepareGraphQuery(query).evaluate();
+      } else {
+        iter = conn.prepareTupleQuery(query).evaluate();
+      }
 
-			if (conn.prepareQuery(query) instanceof GraphQuery) {
-				iter = conn.prepareGraphQuery(query).evaluate();
-			} else {
-				iter = conn.prepareTupleQuery(query).evaluate();
-			}
-
-			File writeTo = isLearnMode() ? resultFile : actualFile;
+      File actualFile = tmpFolder.newFile(resultFile.getName() + "_actual");
+      File writeTo = isLearnMode() ? resultFile : actualFile;
 			try (OutputStream os = new FileOutputStream(writeTo)) {
 				while (iter.hasNext()) {
 					String bs = iter.next().toString()
 							.replace("^^<http://www.w3.org/2001/XMLSchema#string>", "");
-					os.write(bs.getBytes());
-					os.write("\n".getBytes());
+					os.write(bs.getBytes(StandardCharsets.UTF_8));
+					os.write("\n".getBytes(StandardCharsets.UTF_8));
 				}
 			}
 
-			if (!isLearnMode()) {
-				List<String> exp = Files.readAllLines(resultFile.toPath());
-				List<String> act = Files.readAllLines(actualFile.toPath());
+      if (!isLearnMode()) {
+        List<String> exp = Files.readAllLines(resultFile.toPath(), StandardCharsets.UTF_8);
+        List<String> act = Files.readAllLines(actualFile.toPath(), StandardCharsets.UTF_8);
 
 				if (!ordered) {
 					exp.sort(String::compareTo);
 					act.sort(String::compareTo);
 				}
 
-				assertEquals("Number of results", exp.size(), act.size());
+				assertEquals("Number of results", exp, act);
 
 				for (int i = 0; i < act.size(); i++) {
 					assertEquals("Result record is as expected", exp.get(i), act.get(i));
@@ -230,7 +233,7 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 
 		for (File file : inputFolder.listFiles()) {
 			try {
-				String content = new String(Files.readAllBytes(file.toPath()));
+				String content = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
 				if (content.startsWith("{")) {
 					batch.add(Document.parse(content));
 				} else if (content.startsWith("[")) {
