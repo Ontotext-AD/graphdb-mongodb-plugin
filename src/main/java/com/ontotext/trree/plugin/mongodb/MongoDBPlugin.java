@@ -240,12 +240,12 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 				// this way we can match the graph id of that iterator by the current plugin
 				for (MongoResultIterator it : ctx.iters) {
 					if (it instanceof LazyMongoResultIterator
-									&& !((LazyMongoResultIterator) it).isCreated()) {
+									&& ((LazyMongoResultIterator) it).isNotBound()) {
 						// we cannot return lazy iterator that is not initialized as the initialization
 						// should happen down this branch
 						continue;
 					}
-					if (it.getQueryIdentifier() == object && !it.isQuerySet()) {
+					if (it.getQueryIdentifier() == object && !it.isQuerySet() && !it.isClosed()) {
 						return it;
 					}
 				}
@@ -294,7 +294,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 			if (subject != 0) {
 				// match by search subject, will enter on the second pass when the subject is bound
 				for (MongoResultIterator it : ctx.iters) {
-					if (it.getSearchSubject() == subject) {
+					if (it.getSearchSubject() == subject && !it.isClosed()) {
 						resultIterator = it;
 						break;
 					}
@@ -307,7 +307,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 				Iterator<MongoResultIterator> iter = ctx.iters.descendingIterator();
 				while (iter.hasNext()) {
 					MongoResultIterator curr = iter.next();
-					if (curr.getGraphId() == object) {
+					if (curr.getGraphId() == object && !curr.isClosed()) {
 						resultIterator = curr;
 						break;
 					}
@@ -548,9 +548,16 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 	protected MongoResultIterator getIterator(long subject, long context, ContextImpl ctx) {
 		MongoResultIterator iterator = getIteratorOrNull(subject, context, ctx, true);
 		if (iterator == null) {
-			// when no matching iterator is found we can return the last created iterator as this is
-			// our best bet to what we can use
-			return ctx.iters.getLast();
+			// when no matching iterator is found we can return the last created, not closed, iterator
+      // as this is our best bet to what we can use
+      Iterator<MongoResultIterator> iter = ctx.iters.descendingIterator();
+      while (iter.hasNext()) {
+        MongoResultIterator next = iter.next();
+        if (!next.isClosed()) {
+          return next;
+        }
+      }
+      return ctx.iters.getLast();
 		}
 		return iterator;
 	}
@@ -558,7 +565,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 	protected MongoResultIterator getIteratorOrNull(long subject, long context, ContextImpl ctx, boolean canReuseIterators) {
 		if (subject != 0) {
 			for (MongoResultIterator it : ctx.iters) {
-				if (it.getSearchSubject() == subject) {
+				if (it.getSearchSubject() == subject && !it.isClosed()) {
 					return it;
 				}
 			}
@@ -567,15 +574,16 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 			Iterator<MongoResultIterator> iter = ctx.iters.descendingIterator();
 			while (iter.hasNext()) {
 				MongoResultIterator curr = iter.next();
-				if (curr.getQueryIdentifier() == context) {
-					if (!canReuseIterators
-									&& curr.isContextFirst()
-									&& curr.isQuerySet()
-									&& curr.isModelIteratorCreated()
-									&& curr.isEntityIteratorCreated()) {
-						// we do not want to reuse already fully produced/used iterator, so skip it
-						continue;
-					}
+				if (curr.getQueryIdentifier() == context && !curr.isClosed()) {
+//					if (!canReuseIterators
+//									&& curr.isContextFirst()
+//									&& curr.isQuerySet()
+//									&& curr.isModelIteratorCreated()
+//									&& curr.isEntityIteratorCreated()
+//          ) {
+//						// we do not want to reuse already fully produced/used iterator, so skip it
+//						continue;
+//					}
 					return curr;
 				}
 			}
@@ -607,11 +615,30 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 		ctx.searchBNode = entities.put(vf.createBNode(), Scope.REQUEST);
 		ctx.addContext(graphId);
 
+    MongoResultIterator previousIterator = null;
+		if(ctx.iters != null && graphId != 0) {
+      Iterator<MongoResultIterator> iter = ctx.iters.descendingIterator();
+      while (iter.hasNext()) {
+        MongoResultIterator curr = iter.next();
+        if (curr.getQueryIdentifier() == graphId && curr.isClosed()) {
+          previousIterator = curr;
+          break;
+        }
+      }
+    }
+
 		// we are here because the there is graph pattern before the actual query definition
 		// the context is known and it matches the query type '?search a index:spb100 ;'
 		// the created iterator will be added to the context in the method that creates it
 		MongoResultIterator mainIterator = createMainIterator(config, ctx, 0, graphId);
 		mainIterator.setContextFirst(true);
+		if (previousIterator != null) {
+		  mainIterator.setQuery(previousIterator.getQuery());
+		  mainIterator.setAggregation(previousIterator.getAggregation());
+		  mainIterator.setCollation(previousIterator.getCollation());
+		  mainIterator.setHint(previousIterator.getHint());
+		  mainIterator.setProjection(previousIterator.getProjection());
+    }
 		return mainIterator;
 	}
 
@@ -698,8 +725,8 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 			super.setGraphId(context);
 		}
 
-		boolean isCreated() {
-			return getDelegate() != null;
+		boolean isNotBound() {
+			return getDelegate() == null;
 		}
 
 		@Override public boolean next() {
@@ -804,6 +831,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 		}
 
 		@Override public void close() {
+		  super.close();
 			if (delegate != null) {
 				delegate.close();
 			}
@@ -1038,5 +1066,13 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 			}
 			return delegate.getAggregation();
 		}
-	}
+
+    @Override public boolean isClosed() {
+      MongoResultIterator delegate = getDelegate();
+      if (delegate == null) {
+        return super.isClosed();
+      }
+      return delegate.isClosed();
+    }
+  }
 }

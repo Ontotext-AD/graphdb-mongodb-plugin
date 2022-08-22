@@ -56,6 +56,7 @@ public class MongoResultIterator extends StatementIterator {
 	private boolean entityIteratorCreated = false;
 	private boolean modelIteratorCreated = false;
 	private boolean interrupted = false;
+	private boolean closed = false;
 
 	public MongoResultIterator(MongoDBPlugin plugin, MongoClient client, String database, String collection, RequestCache cache, long searchsubject) {
 		this.cache = cache;
@@ -134,6 +135,7 @@ public class MongoResultIterator extends StatementIterator {
 
 	@Override
 	public void close() {
+    closed = true;
 		if (iter != null)
 			iter.close();
 		iter = null;
@@ -365,7 +367,7 @@ public class MongoResultIterator extends StatementIterator {
 	}
 
 	public void setCollation(String collationString){
-		this.collation = createCollation(collationString);
+		setCollation(createCollation(collationString));
 	}
 
 	public Collation getCollation() {
@@ -461,6 +463,10 @@ public class MongoResultIterator extends StatementIterator {
 	public List<Document> getAggregation() {
 		return aggregation;
 	}
+
+	public boolean isClosed() {
+	  return closed;
+  }
 
 	protected void reset() {
 		query = null;

@@ -502,6 +502,34 @@ public class TestPluginMongoBasicQueries extends AbstractMongoBasicTest {
 		verifyUnorderedResult();
 	}
 
+  @Test
+  public void evaluateModelPatternBeforeQuery() throws Exception {
+
+    // the result is graph order dependent.
+    // If the graphs or the query blocks below are reordered then the result will be wrong
+
+    query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\n"
+            + "PREFIX mongodb-index:<http://www.ontotext.com/connectors/mongodb/instance#>\n"
+            + "PREFIX cwork:<http://www.bbc.co.uk/ontologies/creativework/>\n"
+            + "SELECT ?id ?type\n"
+            + "WHERE {\n"
+            + "    {\n"
+            + "        GRAPH mongodb-index:spb100 {\n"
+            + "            ?id a ?type\n"
+            + "        }\n"
+            + "    }union {\n"
+            + "        GRAPH mongodb-index:spb100 {\n"
+            + "            ?id cwork:category ?category\n"
+            + "        }\n"
+            + "    }\n"
+            + "    ?search a mongodb-index:spb100 ;\n"
+            + "             :find \"{'@id' : 'bbcc:1646461#id'}\" ;\n"
+            + "             :entity ?entity .\n"
+            + "}";
+
+    verifyUnorderedResult();
+  }
+
 	@Override
 	protected boolean isLearnMode() {
 		return false;
