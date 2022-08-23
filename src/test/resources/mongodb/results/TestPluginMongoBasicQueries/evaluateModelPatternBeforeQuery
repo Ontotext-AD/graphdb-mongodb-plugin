@@ -1,2 +1,6 @@
-[s1=http://www.bbc.co.uk/things/1646461#id;o1=http://www.bbc.co.uk/ontologies/creativework/BlogPost]
-[s2=http://www.bbc.co.uk/things/1646453#id;o2=http://www.bbc.co.uk/ontologies/creativework/BlogPost]
+[id=http://www.bbc.co.uk/things/1646446#id;type=http://www.bbc.co.uk/ontologies/creativework/BlogPost;audience=http://www.bbc.co.uk/ontologies/creativework/InternationalAudience]
+[id=http://www.bbc.co.uk/things/1646446#id;type=http://www.bbc.co.uk/ontologies/creativework/BlogPost;category=http://www.bbc.co.uk/category/Company]
+[id=http://www.bbc.co.uk/things/1646453#id;type=http://www.bbc.co.uk/ontologies/creativework/BlogPost;audience=http://www.bbc.co.uk/ontologies/creativework/InternationalAudience]
+[id=http://www.bbc.co.uk/things/1646453#id;type=http://www.bbc.co.uk/ontologies/creativework/BlogPost;category=http://www.bbc.co.uk/category/Persons]
+[id=http://www.bbc.co.uk/things/1646461#id;type=http://www.bbc.co.uk/ontologies/creativework/BlogPost;audience=http://www.bbc.co.uk/ontologies/creativework/InternationalAudience]
+[id=http://www.bbc.co.uk/things/1646461#id;type=http://www.bbc.co.uk/ontologies/creativework/BlogPost;category=http://www.bbc.co.uk/category/Persons]

@@ -508,22 +508,27 @@ public class TestPluginMongoBasicQueries extends AbstractMongoBasicTest {
     // the result is graph order dependent.
     // If the graphs or the query blocks below are reordered then the result will be wrong
 
+    // TODO: should be updated
     query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\n"
+            + "PREFIX onto:<http://www.ontotext.com/>\n"
             + "PREFIX mongodb-index:<http://www.ontotext.com/connectors/mongodb/instance#>\n"
             + "PREFIX cwork:<http://www.bbc.co.uk/ontologies/creativework/>\n"
-            + "SELECT ?id ?type\n"
+            + "SELECT ?id ?type ?category ?audience\n"
+            + "from onto:explain \n"
             + "WHERE {\n"
-            + "    {\n"
+//            + "    {\n"
             + "        GRAPH mongodb-index:spb100 {\n"
-            + "            ?id a ?type\n"
+            + "            ?id a ?type .\n"
+            + "            ?id cwork:category ?category .\n"
             + "        }\n"
-            + "    }union {\n"
-            + "        GRAPH mongodb-index:spb100 {\n"
-            + "            ?id cwork:category ?category\n"
-            + "        }\n"
-            + "    }\n"
+//            + "    }union {\n"
+//            + "        GRAPH mongodb-index:spb100 {\n"
+//            + "            ?id a ?type .\n"
+//            + "            ?id cwork:audience ?audience\n"
+//            + "        }\n"
+//            + "    }\n"
             + "    ?search a mongodb-index:spb100 ;\n"
-            + "             :find \"{'@id' : 'bbcc:1646461#id'}\" ;\n"
+            + "             :find '{\"@graph.@type\" : \"cwork:BlogPost\"}' ;\n"
             + "             :entity ?entity .\n"
             + "}";
 

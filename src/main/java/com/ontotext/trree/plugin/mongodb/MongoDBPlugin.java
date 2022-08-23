@@ -67,6 +67,12 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 	protected Map<String, Configuration> configMap = new HashMap<>();
 	protected Map<String, MongoClient> mongoClients = new HashMap<>();
 
+	enum ContextPhase {
+    INITIAL,
+    SEARCH_DEFINITION,
+    MODEL_ITERATION
+  }
+
 	/**
 	 * this is the context implementation where the plugin stores currently running patterns
 	 * it just keeps some values using sting keys for further access
@@ -79,6 +85,8 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 		Set<Long> contexts = new HashSet<>();
 		Entities entities;
 		long searchBNode;
+    ContextPhase previousPhase = ContextPhase.INITIAL;
+    ContextPhase phase = ContextPhase.INITIAL;
 
 		@Override
 		public Request getRequest() {
@@ -115,6 +123,11 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 		public Set<Long> getContexts() {
 			return contexts;
 		}
+
+		public void setPhase(ContextPhase phase) {
+		  previousPhase = this.phase;
+		  this.phase = phase;
+    }
 	}
 
 	@Override
@@ -155,6 +168,8 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 	@Override
 	public double estimate(long subject, long predicate, long object, long context, PluginConnection pluginConnection,
 							 RequestContext requestContext) {
+
+	  System.out.println(String.format("%d %d"));
 		ContextImpl ctx = (requestContext instanceof ContextImpl) ? (ContextImpl) requestContext : null;
 		if (predicate == rdf_type) {
 			if (ctx != null && ctx.iters != null && object != 0) {
@@ -245,7 +260,8 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 						// should happen down this branch
 						continue;
 					}
-					if (it.getQueryIdentifier() == object && !it.isQuerySet() && !it.isClosed()) {
+					if (it.getQueryIdentifier() == object && (!it.isQuerySet() || it.isCloned()) && !it.isClosed()) {
+					  ctx.setPhase(ContextPhase.SEARCH_DEFINITION);
 						return it;
 					}
 				}
@@ -264,7 +280,8 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 			}
 			// get
 			ctx.searchBNode = entities.put(vf.createBNode(), Scope.REQUEST);
-			ctx.addContext(object);
+      ctx.setPhase(ContextPhase.SEARCH_DEFINITION);
+      ctx.addContext(object);
 			MongoResultIterator mainIterator = createMainIterator(config, ctx, object, 0);
 
 			// check if we have lazy iterator that was just materialized by the newly created
@@ -425,7 +442,8 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 			//	 - the iterator was created BEFORE the entering here (contextFirst == false)
 			// - create new iterator when:
 			//	 - there is NO iterator without model pattern or entity pattern
-			iterator = getIteratorOrNull(subject, context, ctx, false);
+      boolean reuseIterators = subject != 0 || (ctx.phase == ContextPhase.MODEL_ITERATION && ctx.previousPhase != ContextPhase.MODEL_ITERATION);
+      iterator = getIteratorOrNull(subject, context, ctx, reuseIterators);
 			if (iterator == null) {
 				iterator = createMainIterator(context, entities, ctx);
 			}
@@ -575,15 +593,15 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 			while (iter.hasNext()) {
 				MongoResultIterator curr = iter.next();
 				if (curr.getQueryIdentifier() == context && !curr.isClosed()) {
-//					if (!canReuseIterators
-//									&& curr.isContextFirst()
-//									&& curr.isQuerySet()
-//									&& curr.isModelIteratorCreated()
-//									&& curr.isEntityIteratorCreated()
-//          ) {
-//						// we do not want to reuse already fully produced/used iterator, so skip it
-//						continue;
-//					}
+					if (!canReuseIterators
+									&& curr.isContextFirst()
+									&& curr.isQuerySet()
+									&& curr.isModelIteratorCreated()
+									&& curr.isEntityIteratorCreated()
+          ) {
+						// we do not want to reuse already fully produced/used iterator, so skip it
+						continue;
+					}
 					return curr;
 				}
 			}
@@ -605,6 +623,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 			MongoResultIterator resultIterator = new LazyMongoResultIterator(graphId, ctx);
 			// register the iterator as any main iterator so it can be accessed by other methods
 			ctx.addIterator(resultIterator);
+      ctx.setPhase(ContextPhase.MODEL_ITERATION);
 			return resultIterator;
 		}
 		if (StringUtils.isBlank(config.getConnectionString())) {
@@ -632,7 +651,9 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 		// the created iterator will be added to the context in the method that creates it
 		MongoResultIterator mainIterator = createMainIterator(config, ctx, 0, graphId);
 		mainIterator.setContextFirst(true);
+    ctx.setPhase(ContextPhase.MODEL_ITERATION);
 		if (previousIterator != null) {
+		  mainIterator.setCloned(true);
 		  mainIterator.setQuery(previousIterator.getQuery());
 		  mainIterator.setAggregation(previousIterator.getAggregation());
 		  mainIterator.setCollation(previousIterator.getCollation());
@@ -1073,6 +1094,22 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
         return super.isClosed();
       }
       return delegate.isClosed();
+    }
+
+    @Override public boolean isCloned() {
+      MongoResultIterator delegate = getDelegate();
+      if (delegate == null) {
+        return super.isCloned();
+      }
+      return delegate.isCloned();
+    }
+
+    @Override public void setCloned(boolean cloned) {
+      MongoResultIterator delegate = getDelegate();
+      if (delegate != null) {
+        delegate.setCloned(cloned);
+      }
+      super.setCloned(cloned);
     }
   }
 }

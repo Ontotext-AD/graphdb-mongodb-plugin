@@ -53,6 +53,7 @@ public class MongoResultIterator extends StatementIterator {
 	private RequestCache cache;
 
 	private boolean contextFirst = false;
+  private boolean cloned = false;
 	private boolean entityIteratorCreated = false;
 	private boolean modelIteratorCreated = false;
 	private boolean interrupted = false;
@@ -286,6 +287,9 @@ public class MongoResultIterator extends StatementIterator {
 			public boolean next() {
 				if (currentRDF == null) {
 					if (!initialized && !initializedByEntityIterator) {
+					  if (!isQuerySet()) {
+					    return false;
+            }
 						initializedByEntityIterator = true;
 						if (initialize()) {
 							advance();
@@ -305,6 +309,11 @@ public class MongoResultIterator extends StatementIterator {
 				if (local == null)
 					local = currentRDF.filter(s, p, o).iterator();
 				boolean has = local.hasNext();
+//				if (!has && hasSolution()) {
+//				  advance();
+//          local = currentRDF.filter(s, p, o).iterator();
+//          has = local.hasNext();
+//        }
 				if (has) {
 					Statement st = local.next();
 					this.subject = entities.resolve(st.getSubject());
@@ -476,4 +485,12 @@ public class MongoResultIterator extends StatementIterator {
 		modelIteratorCreated = false;
 		entityIteratorCreated = false;
 	}
+
+  public boolean isCloned() {
+    return cloned;
+  }
+
+  public void setCloned(boolean cloned) {
+    this.cloned = cloned;
+  }
 }
