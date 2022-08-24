@@ -502,38 +502,59 @@ public class TestPluginMongoBasicQueries extends AbstractMongoBasicTest {
 		verifyUnorderedResult();
 	}
 
-  @Test
-  public void evaluateModelPatternBeforeQuery() throws Exception {
+	@Test
+	public void evaluateModelPatternBeforeQuery() throws Exception {
 
-    // the result is graph order dependent.
-    // If the graphs or the query blocks below are reordered then the result will be wrong
+		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\n"
+						+ "PREFIX mongodb-index:<http://www.ontotext.com/connectors/mongodb/instance#>\n"
+						+ "PREFIX cwork:<http://www.bbc.co.uk/ontologies/creativework/>\n"
+						+ "SELECT ?id ?type ?category ?audience\n"
+						+ "WHERE {\n"
+						+ "		{\n"
+						+ "				GRAPH mongodb-index:spb100 {\n"
+						+ "						?id cwork:category ?category .\n"
+						+ "						?id a ?type .\n"
+						+ "				}\n"
+						+ "		}union {\n"
+						+ "				GRAPH mongodb-index:spb100 {\n"
+						+ "						?id cwork:audience ?audience .\n"
+						+ "						?id a ?type .\n"
+						+ "				}\n"
+						+ "		}\n"
+						+ "		?search a mongodb-index:spb100 ;\n"
+						+ "						 :find '{\"@graph.@type\" : \"cwork:BlogPost\"}' ;\n"
+						+ "						 :entity ?entity .\n"
+						+ "}";
 
-    // TODO: should be updated
-    query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\n"
-            + "PREFIX onto:<http://www.ontotext.com/>\n"
-            + "PREFIX mongodb-index:<http://www.ontotext.com/connectors/mongodb/instance#>\n"
-            + "PREFIX cwork:<http://www.bbc.co.uk/ontologies/creativework/>\n"
-            + "SELECT ?id ?type ?category ?audience\n"
-            + "from onto:explain \n"
-            + "WHERE {\n"
-//            + "    {\n"
-            + "        GRAPH mongodb-index:spb100 {\n"
-            + "            ?id a ?type .\n"
-            + "            ?id cwork:category ?category .\n"
-            + "        }\n"
-//            + "    }union {\n"
-//            + "        GRAPH mongodb-index:spb100 {\n"
-//            + "            ?id a ?type .\n"
-//            + "            ?id cwork:audience ?audience\n"
-//            + "        }\n"
-//            + "    }\n"
-            + "    ?search a mongodb-index:spb100 ;\n"
-            + "             :find '{\"@graph.@type\" : \"cwork:BlogPost\"}' ;\n"
-            + "             :entity ?entity .\n"
-            + "}";
+		verifyUnorderedResult();
+	}
 
-    verifyUnorderedResult();
-  }
+	@Test
+	public void evaluateModelPatternBeforeQuery_noRdfType() throws Exception {
+
+		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\n"
+						+ "PREFIX mongodb-index:<http://www.ontotext.com/connectors/mongodb/instance#>\n"
+						+ "PREFIX cwork:<http://www.bbc.co.uk/ontologies/creativework/>\n"
+						+ "SELECT ?id ?altText ?category ?audience\n"
+						+ "WHERE {\n"
+						+ "		{\n"
+						+ "				GRAPH mongodb-index:spb100 {\n"
+						+ "						?id cwork:altText ?altText .\n"
+						+ "						?id cwork:category ?category .\n"
+						+ "				}\n"
+						+ "		}union {\n"
+						+ "				GRAPH mongodb-index:spb100 {\n"
+						+ "						?id cwork:altText ?altText .\n"
+						+ "						?id cwork:audience ?audience\n"
+						+ "				}\n"
+						+ "		}\n"
+						+ "		?search a mongodb-index:spb100 ;\n"
+						+ "						 :find '{\"@graph.@type\" : \"cwork:BlogPost\"}' ;\n"
+						+ "						 :entity ?entity .\n"
+						+ "}";
+
+		verifyUnorderedResult();
+	}
 
 	@Override
 	protected boolean isLearnMode() {
