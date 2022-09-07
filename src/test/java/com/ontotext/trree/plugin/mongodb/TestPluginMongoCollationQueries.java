@@ -25,14 +25,14 @@ public class TestPluginMongoCollationQueries extends AbstractMongoBasicTest {
 			String firstCollation = "{'locale': 'en', 'caseLevel': true, 'caseFirst': 'upper'," +
 					"'strength': 1, 'numericOrdering': true, 'alternate': 'shifted', 'maxVariable': 'punct', 'backwards': true}";
 			iterator.setCollation(firstCollation);
-			assertEquals("en", iterator.collation.getLocale());
-			assertEquals(true, iterator.collation.getCaseLevel());
-			assertEquals("upper", iterator.collation.getCaseFirst().getValue());
-			assertEquals(1, iterator.collation.getStrength().getIntRepresentation());
-			assertEquals(true, iterator.collation.getNumericOrdering());
-			assertEquals("shifted", iterator.collation.getAlternate().getValue());
-			assertEquals("punct", iterator.collation.getMaxVariable().getValue());
-			assertEquals(true, iterator.collation.getBackwards());
+			assertEquals("en", iterator.getCollation().getLocale());
+			assertEquals(true, iterator.getCollation().getCaseLevel());
+			assertEquals("upper", iterator.getCollation().getCaseFirst().getValue());
+			assertEquals(1, iterator.getCollation().getStrength().getIntRepresentation());
+			assertEquals(true, iterator.getCollation().getNumericOrdering());
+			assertEquals("shifted", iterator.getCollation().getAlternate().getValue());
+			assertEquals("punct", iterator.getCollation().getMaxVariable().getValue());
+			assertEquals(true, iterator.getCollation().getBackwards());
 		} finally {
 			iterator.close();
 		}
@@ -45,14 +45,14 @@ public class TestPluginMongoCollationQueries extends AbstractMongoBasicTest {
 			String secondCollation = "{'locale': 'bg', 'caseLevel': false, 'caseFirst': 'lower'," +
 					"'strength': 3, 'numericOrdering': false, 'alternate': 'non-ignorable', 'maxVariable': 'space', 'backwards': false}";
 			iterator.setCollation(secondCollation);
-			assertEquals("bg", iterator.collation.getLocale());
-			assertEquals(false, iterator.collation.getCaseLevel());
-			assertEquals("lower", iterator.collation.getCaseFirst().getValue());
-			assertEquals(3, iterator.collation.getStrength().getIntRepresentation());
-			assertEquals(false, iterator.collation.getNumericOrdering());
-			assertEquals("non-ignorable", iterator.collation.getAlternate().getValue());
-			assertEquals("space", iterator.collation.getMaxVariable().getValue());
-			assertEquals(false, iterator.collation.getBackwards());
+			assertEquals("bg", iterator.getCollation().getLocale());
+			assertEquals(false, iterator.getCollation().getCaseLevel());
+			assertEquals("lower", iterator.getCollation().getCaseFirst().getValue());
+			assertEquals(3, iterator.getCollation().getStrength().getIntRepresentation());
+			assertEquals(false, iterator.getCollation().getNumericOrdering());
+			assertEquals("non-ignorable", iterator.getCollation().getAlternate().getValue());
+			assertEquals("space", iterator.getCollation().getMaxVariable().getValue());
+			assertEquals(false, iterator.getCollation().getBackwards());
 		} finally {
 			iterator.close();
 		}

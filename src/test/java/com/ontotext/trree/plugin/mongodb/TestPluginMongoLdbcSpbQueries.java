@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -21,7 +22,7 @@ public class TestPluginMongoLdbcSpbQueries extends AbstractMongoBasicTest {
 		}
 	}
 
-	int[] queryIds = new int[] {1, 2, 3, 4, 5, 7, 9, 12};
+	int[] queryIds = new int[] { 1, 2, 3, 4, 5, 7, 9, 12};
 	int[] orderedQueries = new int[] {3, 5};
 
 	@Override
@@ -44,7 +45,8 @@ public class TestPluginMongoLdbcSpbQueries extends AbstractMongoBasicTest {
 
 	public void runQuery(int num) throws Exception {
 		System.out.println("Running query: " + num);
-		String query = new String(Files.readAllBytes(new File(QUERIES_DIR, "mongo_query" + num + ".txt").toPath()));
+		String query = new String(Files.readAllBytes(new File(QUERIES_DIR, "mongo_query" + num + ".txt").toPath()),
+            StandardCharsets.UTF_8);
 
 		File resFile = RESULTS_DIR.resolve(this.getClass().getSimpleName()).resolve("query" + num + ".txt").toFile();
 		if (Arrays.binarySearch(orderedQueries, num) > 0) {

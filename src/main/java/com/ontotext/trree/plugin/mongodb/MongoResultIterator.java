@@ -32,22 +32,32 @@ public class MongoResultIterator extends StatementIterator {
 
 	private static final String CUSTOM_NODE = "custom";
 
-	String query, projection, hint, database, collection;
-	Collation collation;
-	List<Document> aggregation = null;
-	long searchSubject;
-	long graphId;
-	boolean initialized = false;
-	MongoClient client;
-	MongoDatabase db;
-	MongoCollection<Document> coll;
-	MongoCursor<Document> iter;
+	private String query, projection, hint, database, collection;
+	private Collation collation;
+	private List<Document> aggregation = null;
+	private long searchSubject;
+	// custom graph id, if not present should equal to indexId
+	private long graphId;
+	// the id of the index, could be shared among multiple iterators
+	private long indexId;
+	private boolean initialized = false;
+	private boolean initializedByEntityIterator = false;
+	private boolean searchDone = false;
+	private MongoClient client;
+	private MongoDatabase db;
+	private MongoCollection<Document> coll;
+	private MongoCursor<Document> iter;
 	private Model currentRDF;
-	Entities entities;
-	MongoDBPlugin plugin;
-	RequestCache cache;
+	private Entities entities;
+	private MongoDBPlugin plugin;
+	private RequestCache cache;
 
-	boolean interrupted = false;
+	private boolean contextFirst = false;
+  private boolean cloned = false;
+	private boolean entityIteratorCreated = false;
+	private boolean modelIteratorCreated = false;
+	private boolean interrupted = false;
+	private boolean closed = false;
 
 	public MongoResultIterator(MongoDBPlugin plugin, MongoClient client, String database, String collection, RequestCache cache, long searchsubject) {
 		this.cache = cache;
@@ -63,8 +73,19 @@ public class MongoResultIterator extends StatementIterator {
 		boolean ret = false;
 		if (!initialized) {
 			subject = searchSubject;
+			// we cannot call initialize here as this method is called before actual query parameters are set
+			// in order to populate the binding values in the queries
 			ret = true;
 			initialized = true;
+		} else if (initializedByEntityIterator && !searchDone) {
+			// the the graph pattern is located before the search query
+			// the entity iterator will perform the search and return the results, but this iterator
+			// must also return true at least once to tell the engine to read the query variables itself
+			// otherwise they will be left unbound and nothing will be returned as result
+			// so with this here we return true once when the connector is initialized via the entity iterator
+			subject = searchSubject;
+			searchDone = true;
+			ret = true;
 		}
 
 		return ret;
@@ -73,7 +94,7 @@ public class MongoResultIterator extends StatementIterator {
 	protected boolean initialize() {
 		if (query == null && aggregation == null)
 			throw new PluginException("There is no search query for Mongo. Please use either of the predicates: " +
-					Arrays.asList(new String[] {MongoDBPlugin.QUERY.toString(), MongoDBPlugin.AGGREGATION.toString()}));
+					Arrays.asList(MongoDBPlugin.QUERY.toString(), MongoDBPlugin.AGGREGATION.toString()));
 
 		try {
 			if (client != null) {
@@ -115,6 +136,7 @@ public class MongoResultIterator extends StatementIterator {
 
 	@Override
 	public void close() {
+    closed = true;
 		if (iter != null)
 			iter.close();
 		iter = null;
@@ -127,6 +149,8 @@ public class MongoResultIterator extends StatementIterator {
 			currentRDF.clear();
 			currentRDF = null;
 		}
+		initialized = false;
+		initializedByEntityIterator = false;
 	}
 
 	public void setQuery(String query) {
@@ -134,7 +158,7 @@ public class MongoResultIterator extends StatementIterator {
 	}
 
 	public StatementIterator singletonIterator(long predicate, long object) {
-		return StatementIterator.create(searchSubject, predicate, object, 0);
+		return StatementIterator.create(getSearchSubject(), predicate, object, 0);
 	}
 
 	public void setProjection(String projectionString) {
@@ -142,6 +166,7 @@ public class MongoResultIterator extends StatementIterator {
 	}
 
 	public StatementIterator createEntityIter(long pred) {
+		setEntityIteratorCreated(true);
 		return new StatementIterator() {
 			boolean initializedE = false;
 
@@ -177,15 +202,15 @@ public class MongoResultIterator extends StatementIterator {
 		String entity = null;
 		if (doc.containsKey("@graph")) {
 			Object item = doc.get("@graph");
-			Document graphDoc = null;
+			Document graphDoc;
 			if (item != null) {
 				if (item instanceof List) {
-					List listItem = (List)item;
-					if (listItem.get(0) instanceof Document) {
+					List<?> listItem = (List<?>)item;
+					if (!listItem.isEmpty() && listItem.get(0) instanceof Document) {
 						graphDoc = (Document)listItem.get(0);
 						entity = graphDoc.getString("@id");
 						if (listItem.size() > 1) {
-							plugin.getLogger().warn("Multiple graphs in mongo document. Selecting the first one for entity:  " + entity);
+							plugin.getLogger().warn("Multiple graphs in mongo document. Selecting the first one for entity:	" + entity);
 						}
 					} else {
 						plugin.getLogger().warn("Value of @graph must be a valid document in mongo document.");
@@ -237,7 +262,7 @@ public class MongoResultIterator extends StatementIterator {
 			Object customNode = doc.get(CUSTOM_NODE);
 			if (customNode != null && customNode instanceof Document) {
 				for (Map.Entry<String, Object> val : ((Document) customNode).entrySet()) {
-					currentRDF.add(v, plugin.vf.createIRI(plugin.NAMESPACE_INST, val.getKey()), plugin.vf.createLiteral(val.getValue().toString()));
+					currentRDF.add(v, plugin.vf.createIRI(MongoDBPlugin.NAMESPACE_INST, val.getKey()), plugin.vf.createLiteral(val.getValue().toString()));
 				}
 			}
 		} catch (RDFParseException | UnsupportedRDFormatException | IOException e) {
@@ -251,6 +276,7 @@ public class MongoResultIterator extends StatementIterator {
 	}
 
 	public StatementIterator getModelIterator(final long subject, final long predicate, final long object) {
+		setModelIteratorCreated(true);
 		Resource s = subject == 0 ? null : (Resource) entities.get(subject);
 		IRI p = predicate == 0 ? null : (IRI) entities.get(predicate);
 		Value o = object == 0 ? null : entities.get(object);
@@ -259,11 +285,35 @@ public class MongoResultIterator extends StatementIterator {
 
 			@Override
 			public boolean next() {
-				if (currentRDF == null)
-					return false;
+				if (currentRDF == null) {
+					if (!initialized && !initializedByEntityIterator) {
+					  if (!isQuerySet()) {
+					    return false;
+            }
+						initializedByEntityIterator = true;
+						if (initialize()) {
+							advance();
+						} else {
+							// no solutions were found or could not connect
+							return false;
+						}
+					} else {
+						if (hasSolution()) {
+							advance();
+						} else {
+							// no more solutions
+							return false;
+						}
+					}
+				}
 				if (local == null)
 					local = currentRDF.filter(s, p, o).iterator();
 				boolean has = local.hasNext();
+//				if (!has && hasSolution()) {
+//				  advance();
+//          local = currentRDF.filter(s, p, o).iterator();
+//          has = local.hasNext();
+//        }
 				if (has) {
 					Statement st = local.next();
 					this.subject = entities.resolve(st.getSubject());
@@ -296,12 +346,41 @@ public class MongoResultIterator extends StatementIterator {
 		this.graphId = graphId;
 	}
 
+	public long getQueryIdentifier() {
+		long gid = getGraphId();
+		return gid != 0 ? gid : getIndexId();
+	}
+
+	public long getGraphId() {
+		return graphId;
+	}
+
+	public long getIndexId() {
+		return indexId;
+	}
+
+	public void setIndexId(long indexId) {
+		this.indexId = indexId;
+	}
+
+	public long getSearchSubject() {
+		return searchSubject;
+	}
+
+	public void setEntities(Entities entities) {
+		this.entities = entities;
+	}
+
 	public void setHint(String hintString) {
 		this.hint = hintString;
 	}
 
 	public void setCollation(String collationString){
-		this.collation = createCollation(collationString);
+		setCollation(createCollation(collationString));
+	}
+
+	public Collation getCollation() {
+		return collation;
 	}
 
 	private Collation createCollation(String collationString) {
@@ -345,4 +424,73 @@ public class MongoResultIterator extends StatementIterator {
 
 		return builder.build();
 	}
+
+	public boolean isQuerySet() {
+		return query != null || aggregation != null;
+	}
+
+	public boolean isContextFirst() {
+		return contextFirst;
+	}
+
+	public void setContextFirst(boolean contextFirst) {
+		this.contextFirst = contextFirst;
+	}
+
+	public void setModelIteratorCreated(boolean modelIteratorCreated) {
+		this.modelIteratorCreated = modelIteratorCreated;
+	}
+
+	public void setEntityIteratorCreated(boolean entityIteratorCreated) {
+		this.entityIteratorCreated = entityIteratorCreated;
+	}
+
+	public boolean isEntityIteratorCreated() {
+		return entityIteratorCreated;
+	}
+
+	public boolean isModelIteratorCreated() {
+		return modelIteratorCreated;
+	}
+
+	public String getQuery() {
+		return query;
+	}
+
+	public String getProjection() {
+		return projection;
+	}
+
+	public String getHint() {
+		return hint;
+	}
+
+	public void setCollation(Collation collation) {
+		this.collation = collation;
+	}
+
+	public List<Document> getAggregation() {
+		return aggregation;
+	}
+
+	public boolean isClosed() {
+	  return closed;
+  }
+
+	protected void reset() {
+		query = null;
+		aggregation = null;
+		projection = null;
+		hint = null;
+		modelIteratorCreated = false;
+		entityIteratorCreated = false;
+	}
+
+  public boolean isCloned() {
+    return cloned;
+  }
+
+  public void setCloned(boolean cloned) {
+    this.cloned = cloned;
+  }
 }
