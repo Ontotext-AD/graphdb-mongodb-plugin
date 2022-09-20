@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
-import java.nio.charset.MalformedInputException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,14 +28,12 @@ import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 /**
  * Convenient test case for the scenario: upload date to mongo, query it, verify the result.
@@ -48,15 +45,15 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 	protected static final String CONNECT_MONGODB_LOCALHOST = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
 			"PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
 			"insert data {\n"
-			+ "inst:spb100 :service \"%s\" ."
-			+ "inst:spb100 :database \"%s\" ."
-			+ "inst:spb100 :collection \"%s\" ."
+			+ "inst:%s :service \"%s\" ."
+			+ "inst:%1$s :database \"%s\" ."
+			+ "inst:%1$s :collection \"%s\" ."
 			+ "}";
 
 	protected static final String DROP_MONGODB_LOCALHOST = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
 			"PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
 			"insert data {\n"
-			+ "inst:spb100 :drop \"%s\" ."
+			+ "inst:%s :drop \"%s\" ."
 			+ "}";
 
 
@@ -270,13 +267,13 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 				ObjectId id = doc.getObjectId("_id");
 				List<Map<String, Object>> graph = (List<Map<String, Object>>) doc.get("@graph");
 
-				for (Map.Entry currentValue : graph.get(0).entrySet()) {
+				for (Map.Entry<String, Object> currentValue : graph.get(0).entrySet()) {
 					Object object = graph.get(0).get(currentValue.getKey());
 
 					if (object instanceof Document) {
-						addMongoDates((Document) object, id, currentValue.getKey().toString());
-					} else if(object instanceof ArrayList) {
-						addMongoDates((ArrayList<Object>) object, id, currentValue.getKey().toString());
+						addMongoDates((Document) object, id, currentValue.getKey());
+					} else if(object instanceof List) {
+						addMongoDates((List<?>) object, id, currentValue.getKey());
 					}
 				}
 			}
@@ -285,18 +282,18 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 		}
 	}
 
-	private void addMongoDates(ArrayList<Object> objects, ObjectId objectId, String prefix) throws ParseException {
+	private void addMongoDates(List<?> objects, ObjectId objectId, String prefix) throws ParseException {
 		for (Object object : objects) {
 			if (object instanceof Document) {
-				for (Map.Entry currentValue : ((Document) object).entrySet()) {
+				for (Map.Entry<String, Object> currentValue : ((Document) object).entrySet()) {
 					StringBuilder sb = new StringBuilder();
 					sb.append(prefix);
 					if (currentValue.getValue() instanceof Document) {
-						sb.append("[").append(currentValue.getKey().toString());
+						sb.append("[").append(currentValue.getKey());
 						addMongoDates((Document) currentValue.getValue(), objectId, sb.toString());
-					} else if (currentValue.getValue() instanceof ArrayList) {
-						sb.append("[" + currentValue.getKey().toString());
-						addMongoDates((ArrayList<Object>) currentValue.getValue(), objectId, sb.toString());
+					} else if (currentValue.getValue() instanceof List) {
+						sb.append("[").append(currentValue.getKey());
+						addMongoDates((List<?>) currentValue.getValue(), objectId, sb.toString());
 					}
 				}
 			}
@@ -331,18 +328,30 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 
 	protected void connectToMongoDB() {
 		try (RepositoryConnection conn = getRepository().getConnection()) {
-			conn.prepareUpdate(String.format(CONNECT_MONGODB_LOCALHOST, getServiceName(), MONGODB_DATABASE, MONGODB_COLLECTION)).execute();
+      indexes().build().forEach(index -> insertMongoConfiguration(conn, index));
 
-			mongo = MongoClients.create(getServiceName());
+      mongo = MongoClients.create(getServiceName());
 			collection = mongo.getDatabase(MONGODB_DATABASE).getCollection(MONGODB_COLLECTION);
 		}
 	}
 
-	protected void disconnectFromMongoDB() {
-		try (RepositoryConnection conn = getRepository().getConnection()) {
-			conn.prepareUpdate(String.format(DROP_MONGODB_LOCALHOST, getServiceName())).execute();
-		}
-	}
+  protected void insertMongoConfiguration(RepositoryConnection conn, String indexName) {
+    conn.prepareUpdate(String.format(CONNECT_MONGODB_LOCALHOST, indexName, getServiceName(), MONGODB_DATABASE, MONGODB_COLLECTION)).execute();
+  }
+
+  protected void disconnectFromMongoDB() {
+    try (RepositoryConnection conn = getRepository().getConnection()) {
+      indexes().build().forEach(index -> dropIndex(conn, index));
+    }
+  }
+
+  private void dropIndex(RepositoryConnection conn, String index) {
+    conn.prepareUpdate(String.format(DROP_MONGODB_LOCALHOST, index, getServiceName())).execute();
+  }
+
+  protected Stream.Builder<String> indexes() {
+    return Stream.<String>builder().add("spb100");
+  }
 
 	protected String getServiceName() {
 		return "mongodb://localhost:" + mongoProcess.getConfig().net().getPort();

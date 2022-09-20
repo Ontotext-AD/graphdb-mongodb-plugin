@@ -286,34 +286,11 @@ public class MongoResultIterator extends StatementIterator {
 			@Override
 			public boolean next() {
 				if (currentRDF == null) {
-					if (!initialized && !initializedByEntityIterator) {
-					  if (!isQuerySet()) {
-					    return false;
-            }
-						initializedByEntityIterator = true;
-						if (initialize()) {
-							advance();
-						} else {
-							// no solutions were found or could not connect
-							return false;
-						}
-					} else {
-						if (hasSolution()) {
-							advance();
-						} else {
-							// no more solutions
-							return false;
-						}
-					}
+          return false;
 				}
 				if (local == null)
 					local = currentRDF.filter(s, p, o).iterator();
 				boolean has = local.hasNext();
-//				if (!has && hasSolution()) {
-//				  advance();
-//          local = currentRDF.filter(s, p, o).iterator();
-//          has = local.hasNext();
-//        }
 				if (has) {
 					Statement st = local.next();
 					this.subject = entities.resolve(st.getSubject());

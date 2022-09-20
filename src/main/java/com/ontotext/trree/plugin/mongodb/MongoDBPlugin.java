@@ -440,7 +440,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 			//	 - the iterator was created BEFORE the entering here (contextFirst == false)
 			// - create new iterator when:
 			//	 - there is NO iterator without model pattern or entity pattern
-			boolean reuseIterators = subject != 0 || (ctx.phase == ContextPhase.MODEL_ITERATION && ctx.previousPhase != ContextPhase.MODEL_ITERATION);
+			boolean reuseIterators = true; //subject != 0 || (ctx.phase == ContextPhase.MODEL_ITERATION && ctx.previousPhase != ContextPhase.MODEL_ITERATION);
 			iterator = getIteratorOrNull(subject, context, ctx, reuseIterators);
 			if (iterator == null) {
 				iterator = createMainIterator(context, entities, ctx);
