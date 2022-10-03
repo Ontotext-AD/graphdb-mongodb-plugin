@@ -418,38 +418,41 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 
 		if (context != 0) {
 			MongoResultIterator iterator;
-			if (ctx.iters == null) {
-				// no iterators up until this moment so we probably have model pattern before the actual query definition
-				// try to create main iterator in advance or lazy iterator if custom graph is used
-				iterator = createMainIterator(context, entities, ctx);
+			String suffix = Utils.matchPrefix(entities.get(context).stringValue(), NAMESPACE_INST);
+			if (suffix != null && suffix.length() > 0) {
+				if (ctx.iters == null) {
+					// no iterators up until this moment so we probably have model pattern before the actual query definition
+					// try to create main iterator in advance or lazy iterator if custom graph is used
+					iterator = createMainIterator(context, entities, ctx);
+					if (iterator == null) {
+						// invalid mongo configuration, already logged by the method above
+						return StatementIterator.EMPTY;
+					}
+					return iterator.getModelIterator(subject, predicate, object);
+				}
+
+				// we have previous iterator, we must find suitable one from them
+				// we can be here in the following cases:
+				// - model pattern, before actual query
+				// - model pattern, after actual query
+				// - repeating model pattern after actual query
+				// - repeating model pattern before actual query
+				// the rules for picking existing vs new iterator are as follows:
+				// - use existing iterator when:
+				//	 - the iterator was created BEFORE the entering here (contextFirst == false)
+				// - create new iterator when:
+				//	 - there is NO iterator without model pattern or entity pattern
+				boolean reuseIterators = subject != 0 || (ctx.phase == ContextPhase.MODEL_ITERATION && ctx.previousPhase != ContextPhase.MODEL_ITERATION);
+				iterator = getIteratorOrNull(subject, context, ctx, reuseIterators);
+				if (iterator == null) {
+					iterator = createMainIterator(context, entities, ctx);
+				}
 				if (iterator == null) {
 					// invalid mongo configuration, already logged by the method above
 					return StatementIterator.EMPTY;
 				}
 				return iterator.getModelIterator(subject, predicate, object);
 			}
-
-			// we have previous iterator, we must find suitable one from them
-			// we can be here in the following cases:
-			// - model pattern, before actual query
-			// - model pattern, after actual query
-			// - repeating model pattern after actual query
-			// - repeating model pattern before actual query
-			// the rules for picking existing vs new iterator are as follows:
-			// - use existing iterator when:
-			//	 - the iterator was created BEFORE the entering here (contextFirst == false)
-			// - create new iterator when:
-			//	 - there is NO iterator without model pattern or entity pattern
-			boolean reuseIterators = subject != 0 || (ctx.phase == ContextPhase.MODEL_ITERATION && ctx.previousPhase != ContextPhase.MODEL_ITERATION);
-			iterator = getIteratorOrNull(subject, context, ctx, reuseIterators);
-			if (iterator == null) {
-				iterator = createMainIterator(context, entities, ctx);
-			}
-			if (iterator == null) {
-				// invalid mongo configuration, already logged by the method above
-				return StatementIterator.EMPTY;
-			}
-			return iterator.getModelIterator(subject, predicate, object);
 		}
 		return null;
 	}
