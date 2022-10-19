@@ -1,0 +1,76 @@
+{
+  "@id" : "http://www.bbc.co.uk/things/1#id",
+  "@type" : "cwork:NewsItem",
+  "bbc:primaryContentOf" : [ {
+    "@id" : "bbcd:1#id",
+    "bbc:webDocumentType" : {
+      "@id" : "bbc:HighWeb"
+    }
+  }, {
+    "@id" : "bbcd:2#id",
+    "bbc:webDocumentType" : {
+      "@id" : "bbc:Mobile"
+    }
+  } ],
+  "cwork:about" : [ {
+    "@id" : "dbpedia:AccessAir"
+  }, {
+    "@id" : "dbpedia:Battle_of_Bristoe_Station"
+  }, {
+    "@id" : "dbpedia:Nicolas_Bricaire_de_la_Dixmerie"
+  }, {
+    "@id" : "dbpedia:Bernard_Roberts"
+  }, {
+    "@id" : "dbpedia:Bartolomé_de_Medina"
+  }, {
+    "@id" : "dbpedia:Don_Bonker"
+  }, {
+    "@id" : "dbpedia:Cornel_Nistorescu"
+  }, {
+    "@id" : "dbpedia:Clete_Roberts"
+  }, {
+    "@id" : "dbpedia:Mark_Palansky"
+  }, {
+    "@id" : "dbpedia:Paul_Green_(taekwondo)"
+  }, {
+    "@id" : "dbpedia:Mostafa_Abdel_Satar"
+  }, {
+    "@id" : "dbpedia:Tommy_O'Connell_(hurler)"
+  }, {
+    "@id" : "dbpedia:Ahmed_Ali_Salaad"
+  } ],
+  "cwork:altText" : "thumbnail atlText for CW http://www.bbc.co.uk/context/1#id",
+  "cwork:audience" : {
+    "@id" : "cwork:NationalAudience"
+  },
+  "cwork:category" : {
+    "@id" : "http://www.bbc.co.uk/category/Company"
+  },
+  "cwork:dateCreated" : {
+    "@type" : "xsd:dateTime",
+    "@value" : "2011-02-15T07:13:29.495+02:00"
+  },
+  "cwork:dateModified" : {
+    "@type" : "xsd:dateTime",
+    "@value" : "2012-02-14T12:43:13.165+02:00"
+  },
+  "cwork:description" : " constipate meant breaking felt glitzier democrat's huskily breeding solicit gargling.",
+  "cwork:liveCoverage" : {
+    "@type" : "xsd:boolean",
+    "@value" : "false"
+  },
+  "cwork:mentions" : {
+    "@id" : "geonames:2862704/"
+  },
+  "cwork:primaryFormat" : [ {
+    "@id" : "cwork:TextualFormat"
+  }, {
+    "@id" : "cwork:InteractiveFormat"
+  } ],
+  "cwork:shortTitle" : " closest subsystem merit rebuking disengagement cerebrums caravans conduction disbelieved might.",
+  "cwork:thumbnail" : {
+    "@id" : "bbct:1361611547"
+  },
+  "cwork:title" : "Beckhoff greatly agitators constructed racquets industry restrain spews pitifully undertone stultification.",
+  "@context" : "http://localhost:54334/context/context.json"
+}

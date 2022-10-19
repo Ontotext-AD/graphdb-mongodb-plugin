@@ -233,6 +233,9 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 		List<Document> batch = new LinkedList<Document>();
 
 		for (File file : inputFolder.listFiles()) {
+		  if (file.isDirectory()) {
+		    continue;
+      }
 			try {
 				String content = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
 				if (content.startsWith("{")) {

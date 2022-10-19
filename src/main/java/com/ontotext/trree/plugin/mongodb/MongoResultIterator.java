@@ -11,16 +11,22 @@ import com.ontotext.trree.sdk.Entities;
 import com.ontotext.trree.sdk.Entities.Scope;
 import com.ontotext.trree.sdk.PluginException;
 import com.ontotext.trree.sdk.StatementIterator;
+import org.apache.commons.io.IOUtils;
 import org.bson.Document;
 import org.bson.codecs.DocumentCodec;
 import org.bson.json.JsonMode;
 import org.bson.json.JsonWriterSettings;
 import org.eclipse.rdf4j.model.*;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.ParserConfig;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.rio.UnsupportedRDFormatException;
+import org.eclipse.rdf4j.rio.helpers.JSONLDSettings;
+import org.eclipse.rdf4j.rio.helpers.ParseErrorLogger;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
@@ -52,8 +58,10 @@ public class MongoResultIterator extends StatementIterator {
 	private MongoDBPlugin plugin;
 	private RequestCache cache;
 
+	private final ParserConfig jsonLdParserConfig;
+
 	private boolean contextFirst = false;
-  private boolean cloned = false;
+	private boolean cloned = false;
 	private boolean entityIteratorCreated = false;
 	private boolean modelIteratorCreated = false;
 	private boolean interrupted = false;
@@ -66,6 +74,11 @@ public class MongoResultIterator extends StatementIterator {
 		this.database = database;
 		this.collection = collection;
 		this.searchSubject = searchsubject;
+
+		// use different loader for the parser config for the current session
+		// this way we would not accumulate a lot of documents over time
+		jsonLdParserConfig = new ParserConfig();
+		jsonLdParserConfig.set(JSONLDSettings.DOCUMENT_LOADER, new CachingDocumentLoader());
 	}
 
 	@Override
@@ -136,7 +149,7 @@ public class MongoResultIterator extends StatementIterator {
 
 	@Override
 	public void close() {
-    closed = true;
+		closed = true;
 		if (iter != null)
 			iter.close();
 		iter = null;
@@ -151,6 +164,8 @@ public class MongoResultIterator extends StatementIterator {
 		}
 		initialized = false;
 		initializedByEntityIterator = false;
+
+		IOUtils.closeQuietly((Closeable) jsonLdParserConfig.get(JSONLDSettings.DOCUMENT_LOADER));
 	}
 
 	public void setQuery(String query) {
@@ -226,41 +241,56 @@ public class MongoResultIterator extends StatementIterator {
 		if (entity == null){
 			entity = doc.getString("@id");
 		}
-		Resource v = null;
-		if (entity != null) {
-			try {
-				v = plugin.vf.createIRI(entity);
-			} catch (IllegalArgumentException e) {
-				Document contexts = (Document)doc.get("@context");
-				if (contexts != null) {
-					String base = contexts.getString("@base");
-					if (base != null) {
-						try {
-							v = plugin.vf.createIRI(base, entity);
-						} catch (IllegalArgumentException e2) {
-							// ignore the exception
-						}
-					}
-				}
-				if (v == null)
-					throw e;
-			}
-		} else {
-			v = plugin.vf.createBNode();
-		}
-		long id = entities.resolve(v);
-		if (id == 0) {
-			id = entities.put(v, Scope.REQUEST);
-		}
-		this.object = id;
 		try {
 			//Relaxed mode Json conversion is needed for canonical MongoDB v2 Json document values
-			currentRDF = Rio.parse(new StringReader(
-					doc.toJson(JsonWriterSettings.builder().outputMode(JsonMode.RELAXED).build(),
-							new EncoderWrapper(new DocumentCodec()))), "http://base.org", RDFFormat.JSONLD);
+			JsonWriterSettings jsonWriterSettings = JsonWriterSettings.builder().outputMode(JsonMode.RELAXED).build();
+			EncoderWrapper encoderWrapper = new EncoderWrapper(new DocumentCodec());
+			StringReader reader = new StringReader(doc.toJson(jsonWriterSettings, encoderWrapper));
+
+			currentRDF = Rio.parse(reader, "http://base.org", RDFFormat.JSONLD, jsonLdParserConfig,
+							SimpleValueFactory.getInstance(), new ParseErrorLogger());
+
+			Resource v = null;
+			if (entity != null) {
+				try {
+					v = plugin.vf.createIRI(entity);
+				} catch (IllegalArgumentException e) {
+					Object contextValue = doc.get("@context");
+					if (contextValue instanceof Document) {
+						Document contexts = (Document) contextValue;
+						String base = contexts.getString("@base");
+						if (base != null) {
+							try {
+								v = plugin.vf.createIRI(base, entity);
+							} catch (IllegalArgumentException e2) {
+								// ignore the exception
+							}
+						}
+					} else {
+						// the context is missing, not defined/used or is external one
+						// in this case get the subject of any statement and this should be our id
+						// it's either fully resolved IRI or a BNode
+						Iterator<Statement> it = currentRDF.getStatements(null, null, null).iterator();
+						if (it.hasNext()) {
+							v = it.next().getSubject();
+						}
+					}
+
+					if (v == null) {
+						throw e;
+					}
+				}
+			} else {
+				v = plugin.vf.createBNode();
+			}
+			long id = entities.resolve(v);
+			if (id == 0) {
+				id = entities.put(v, Scope.REQUEST);
+			}
+			this.object = id;
 
 			Object customNode = doc.get(CUSTOM_NODE);
-			if (customNode != null && customNode instanceof Document) {
+			if (customNode instanceof Document) {
 				for (Map.Entry<String, Object> val : ((Document) customNode).entrySet()) {
 					currentRDF.add(v, plugin.vf.createIRI(MongoDBPlugin.NAMESPACE_INST, val.getKey()), plugin.vf.createLiteral(val.getValue().toString()));
 				}
@@ -287,9 +317,9 @@ public class MongoResultIterator extends StatementIterator {
 			public boolean next() {
 				if (currentRDF == null) {
 					if (!initialized && !initializedByEntityIterator) {
-					  if (!isQuerySet()) {
-					    return false;
-            }
+						if (!isQuerySet()) {
+							return false;
+						}
 						initializedByEntityIterator = true;
 						if (initialize()) {
 							advance();
@@ -310,10 +340,10 @@ public class MongoResultIterator extends StatementIterator {
 					local = currentRDF.filter(s, p, o).iterator();
 				boolean has = local.hasNext();
 //				if (!has && hasSolution()) {
-//				  advance();
-//          local = currentRDF.filter(s, p, o).iterator();
-//          has = local.hasNext();
-//        }
+//					advance();
+//					local = currentRDF.filter(s, p, o).iterator();
+//					has = local.hasNext();
+//				}
 				if (has) {
 					Statement st = local.next();
 					this.subject = entities.resolve(st.getSubject());
@@ -474,8 +504,8 @@ public class MongoResultIterator extends StatementIterator {
 	}
 
 	public boolean isClosed() {
-	  return closed;
-  }
+		return closed;
+	}
 
 	protected void reset() {
 		query = null;
@@ -486,11 +516,11 @@ public class MongoResultIterator extends StatementIterator {
 		entityIteratorCreated = false;
 	}
 
-  public boolean isCloned() {
-    return cloned;
-  }
+	public boolean isCloned() {
+		return cloned;
+	}
 
-  public void setCloned(boolean cloned) {
-    this.cloned = cloned;
-  }
+	public void setCloned(boolean cloned) {
+		this.cloned = cloned;
+	}
 }
