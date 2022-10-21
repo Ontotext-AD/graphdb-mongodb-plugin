@@ -1,0 +1,98 @@
+{
+  "@graph": [
+    {
+      "@id": "http://www.bbc.co.uk/things/1646449#id",
+      "@type": "cwork:NewsItem",
+      "bbc:primaryContentOf": [
+        {
+          "@id": "bbcd:269686#id",
+          "bbcwebDocumentType": {
+            "@id": "bbc:Mobile"
+          }
+        },
+        {
+          "@id": "bbcd:269687#id",
+          "bbcwebDocumentType": {
+            "@id": "bbc:HighWeb"
+          }
+        },
+        {
+          "@id": "bbcd:269688#id",
+          "bbcwebDocumentType": {
+            "@id": "bbc:HighWeb"
+          }
+        }
+      ],
+      "cwork:about": [
+        {
+          "@id": "dbpedia:Brasserie_du_Bocq"
+        },
+        {
+          "@id": "dbpedia:Nicholas_Henderson"
+        },
+        {
+          "@id": "dbpedia:You_Quan"
+        },
+        {
+          "@id": "dbpedia:Kosaku_Akimoto"
+        },
+        {
+          "@id": "dbpedia:Rudolph_Ready"
+        },
+        {
+          "@id": "dbpedia:Jason_Thompson_(first_baseman,_born_1971)"
+        },
+        {
+          "@id": "dbpedia:John_Kizell"
+        },
+        {
+          "@id": "dbpedia:Kyle_Trout"
+        },
+        {
+          "@id": "dbpedia:Liesl_Jobson"
+        },
+        {
+          "@id": "dbpedia:Edgar_Nixon"
+        }
+      ],
+      "cwork:altText": "thumbnail atlText for CW http://www.bbc.co.uk/context/1646449#id",
+      "cwork:audience": {
+        "@id": "cwork:NationalAudience"
+      },
+      "cwork:category": {
+        "@id": "http://www.bbc.co.uk/category/Company"
+      },
+      "cwork:dateCreated": {
+        "@type": "xsd:dateTime",
+        "@value": "2011-08-18T22:03:51.851+03:00"
+      },
+      "cwork:dateModified": {
+        "@type": "xsd:dateTime",
+        "@value": "2012-07-31T08:38:07.057+03:00"
+      },
+      "cwork:description": " acceded pinioning casual jute adjudicated wounding erythrocyte budgerigar favoritism.",
+      "cwork:liveCoverage": {
+        "@type": "xsd:boolean",
+        "@value": "false"
+      },
+      "cwork:mentions": {
+        "@id": "geonames:668546/"
+      },
+      "cwork:primaryFormat": [
+        {
+          "@id": "cwork:TextualFormat"
+        },
+        {
+          "@id": "cwork:InteractiveFormat"
+        }
+      ],
+      "cwork:shortTitle": " nursed earldom excavated undertows primps cummerbund hallows confluence thousandths collapsed.",
+      "cwork:thumbnail": {
+        "@id": "bbct:319571253"
+      },
+      "cwork:title": "Harris Teeter paves stylist murkiest hens pulpy registering debate sensation practice singers."
+    }
+  ],
+  "@id": "bbcc:1646449#id",
+  "@context": "http://localhost:54334/context/context.json"
+}
