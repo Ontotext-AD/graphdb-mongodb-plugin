@@ -72,4 +72,4 @@ WHERE {
     }
 }
 GROUP BY ?topic
-ORDER BY DESC(?cnt)
+ORDER BY DESC(?cnt) ?topic
