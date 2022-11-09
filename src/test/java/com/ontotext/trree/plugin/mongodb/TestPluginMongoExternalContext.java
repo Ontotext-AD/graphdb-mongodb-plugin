@@ -38,6 +38,10 @@ public class TestPluginMongoExternalContext extends AbstractMongoBasicTest {
     loadFilesToMongo();
   }
 
+  @Override protected boolean isLearnMode() {
+    return false;
+  }
+
   @BeforeClass
   public static void setupHttpEndpoint() throws IOException {
     server = createTestServer(stubResponses(), 54334);
@@ -56,11 +60,11 @@ public class TestPluginMongoExternalContext extends AbstractMongoBasicTest {
 
   private static Map<String, HttpRequestHandler> stubResponses() {
     Map<String, HttpRequestHandler> handlers = new HashMap<>(4);
-    handlers.put("/context/context.json", buildRepositoriesResponse());
+    handlers.put("/context/context.json", buildContextResponse());
     return handlers;
   }
 
-  private static HttpRequestHandler buildRepositoriesResponse() {
+  private static HttpRequestHandler buildContextResponse() {
     return (httpRequest, httpResponse, httpContext) -> {
       hitCount.incrementAndGet();
       httpResponse.addHeader(HttpHeaders.CONTENT_TYPE, "application/ld-json");
@@ -89,21 +93,44 @@ public class TestPluginMongoExternalContext extends AbstractMongoBasicTest {
    * We should test that the context cache works and is actually used
    */
   @Test
-  public void testExternalContextWithCaching() {
+  public void testExternalContextWithCaching() throws Exception {
 
-    String query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
-            "PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
-            "select distinct ?entity {\n"
+    query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\n" +
+            "PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\n" +
+            "PREFIX bbc: <http://www.bbc.co.uk/ontologies/bbc/>\n" +
+            "select distinct ?s ?p ?o {\n"
             + "\t?search a inst:spb100 ;\n"
             + "\t:find \"{}\" ;"
             + "\t:entity ?entity .\n"
             + "\tgraph inst:spb100 {\n"
-            + "\t\t?s ?p ?o .\n"
+            + "\t\t?s bbc:primaryContentOf ?o .\n"
             + "\t}\n"
             + "}";
 
-    verifyResultsCount(query, 2);
+    verifyUnorderedResult();
     Assert.assertEquals(1, hitCount.get());
+  }
+
+  /**
+   * We should test that the context cache works and is actually used
+   */
+  @Test
+  public void testResolveBaseFromExternalContext() throws Exception {
+
+    query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\n" +
+            "PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\n" +
+            "PREFIX cwork: <http://www.bbc.co.uk/ontologies/creativework/>\n" +
+            "select distinct ?s ?category {\n"
+            + "\t?search a inst:spb100 ;\n"
+            + "\t:find \"{'@id' : 'things/1#id'}\" ;\n"
+            + "\t:entity ?entity .\n"
+            + "\tgraph inst:spb100 {\n"
+            + "\t\t?s a ?o .\n"
+            + "\t\t?s cwork:category ?category\n"
+            + "\t}\n"
+            + "}";
+
+    verifyUnorderedResult();
   }
 
   @Override

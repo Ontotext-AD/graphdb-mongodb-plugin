@@ -1,5 +1,6 @@
 {
-  "@id" : "http://www.bbc.co.uk/things/1#id",
+  "@context": "http://localhost:54334/context/context.json",
+  "@id" : "things/1#id",
   "@type" : "cwork:NewsItem",
   "bbc:primaryContentOf" : [ {
     "@id" : "bbcd:1#id",
@@ -44,7 +45,7 @@
     "@id" : "cwork:NationalAudience"
   },
   "cwork:category" : {
-    "@id" : "http://www.bbc.co.uk/category/Company"
+    "@id" : "category/Company"
   },
   "cwork:dateCreated" : {
     "@type" : "xsd:dateTime",
@@ -71,6 +72,5 @@
   "cwork:thumbnail" : {
     "@id" : "bbct:1361611547"
   },
-  "cwork:title" : "Beckhoff greatly agitators constructed racquets industry restrain spews pitifully undertone stultification.",
-  "@context" : "http://localhost:54334/context/context.json"
+  "cwork:title" : "Beckhoff greatly agitators constructed racquets industry restrain spews pitifully undertone stultification."
 }

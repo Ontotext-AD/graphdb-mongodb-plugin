@@ -1,5 +1,12 @@
 package com.ontotext.trree.plugin.mongodb;
 
+import static com.github.jsonldjava.core.JsonLdConsts.BASE;
+import static com.github.jsonldjava.core.JsonLdConsts.CONTEXT;
+import static com.github.jsonldjava.core.JsonLdConsts.GRAPH;
+import static com.github.jsonldjava.core.JsonLdConsts.ID;
+
+import com.github.jsonldjava.core.JsonLdError;
+import com.github.jsonldjava.core.RemoteDocument;
 import com.mongodb.MongoSecurityException;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Collation;
@@ -33,6 +40,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class MongoResultIterator extends StatementIterator {
 
@@ -59,6 +67,7 @@ public class MongoResultIterator extends StatementIterator {
 	private RequestCache cache;
 
 	private final ParserConfig jsonLdParserConfig;
+	private final CachingDocumentLoader documentLoader;
 
 	private boolean contextFirst = false;
 	private boolean cloned = false;
@@ -78,7 +87,8 @@ public class MongoResultIterator extends StatementIterator {
 		// use different loader for the parser config for the current session
 		// this way we would not accumulate a lot of documents over time
 		jsonLdParserConfig = new ParserConfig();
-		jsonLdParserConfig.set(JSONLDSettings.DOCUMENT_LOADER, new CachingDocumentLoader());
+		documentLoader = new CachingDocumentLoader();
+		jsonLdParserConfig.set(JSONLDSettings.DOCUMENT_LOADER, documentLoader);
 	}
 
 	@Override
@@ -215,15 +225,15 @@ public class MongoResultIterator extends StatementIterator {
 			return;
 		
 		String entity = null;
-		if (doc.containsKey("@graph")) {
-			Object item = doc.get("@graph");
+		if (doc.containsKey(GRAPH)) {
+			Object item = doc.get(GRAPH);
 			Document graphDoc;
 			if (item != null) {
 				if (item instanceof List) {
 					List<?> listItem = (List<?>)item;
 					if (!listItem.isEmpty() && listItem.get(0) instanceof Document) {
 						graphDoc = (Document)listItem.get(0);
-						entity = graphDoc.getString("@id");
+						entity = graphDoc.getString(ID);
 						if (listItem.size() > 1) {
 							plugin.getLogger().warn("Multiple graphs in mongo document. Selecting the first one for entity:	" + entity);
 						}
@@ -232,22 +242,42 @@ public class MongoResultIterator extends StatementIterator {
 					}
 				} else if (item instanceof Document) {
 					graphDoc = (Document)item;
-					entity = graphDoc.getString("@id");
+					entity = graphDoc.getString(ID);
 				} else {
 					plugin.getLogger().warn("@graph must be a document or list of documents in mongo document.");
 				}
 			}
 		}
-		if (entity == null){
-			entity = doc.getString("@id");
+		if (entity == null) {
+			// the document didn't contain @graph node or the node didn't have correct structure
+			// or @id has not been found
+			entity = doc.getString(ID);
 		}
+		String docBase = null;
+		// if the current document contains a local @ use it to resolve the relative entities
+		// otherwise resolve the @base from the given context if present
+		if (doc.containsKey(BASE)) {
+			Object baseValue = doc.get(BASE);
+			if (baseValue instanceof String) {
+				docBase = baseValue.toString();
+			} else if (baseValue != null) {
+				plugin.getLogger().warn("@base must be a string but got: {}", baseValue);
+			}
+		} else if (doc.containsKey(CONTEXT)) {
+			Object ctxValue = doc.get(CONTEXT);
+			docBase = resolveDocumentBase(ctxValue);
+		}
+		// if the @base is not defined at all, use a default in order not to break during json-ld parsing
+		docBase = Objects.toString(docBase, "http://base.org");
+
 		try {
 			//Relaxed mode Json conversion is needed for canonical MongoDB v2 Json document values
 			JsonWriterSettings jsonWriterSettings = JsonWriterSettings.builder().outputMode(JsonMode.RELAXED).build();
 			EncoderWrapper encoderWrapper = new EncoderWrapper(new DocumentCodec());
-			StringReader reader = new StringReader(doc.toJson(jsonWriterSettings, encoderWrapper));
+			String json = doc.toJson(jsonWriterSettings, encoderWrapper);
+			StringReader reader = new StringReader(json);
 
-			currentRDF = Rio.parse(reader, "http://base.org", RDFFormat.JSONLD, jsonLdParserConfig,
+			currentRDF = Rio.parse(reader, docBase, RDFFormat.JSONLD, jsonLdParserConfig,
 							SimpleValueFactory.getInstance(), new ParseErrorLogger());
 
 			Resource v = null;
@@ -255,16 +285,13 @@ public class MongoResultIterator extends StatementIterator {
 				try {
 					v = plugin.vf.createIRI(entity);
 				} catch (IllegalArgumentException e) {
-					Object contextValue = doc.get("@context");
-					if (contextValue instanceof Document) {
-						Document contexts = (Document) contextValue;
-						String base = contexts.getString("@base");
-						if (base != null) {
-							try {
-								v = plugin.vf.createIRI(base, entity);
-							} catch (IllegalArgumentException e2) {
-								// ignore the exception
-							}
+					Object contextValue = doc.get(CONTEXT);
+					String base = resolveDocumentBase(contextValue);
+					if (base != null) {
+						try {
+							v = plugin.vf.createIRI(base, entity);
+						} catch (IllegalArgumentException e2) {
+							// ignore the exception
 						}
 					} else {
 						// the context is missing, not defined/used or is external one
@@ -273,6 +300,8 @@ public class MongoResultIterator extends StatementIterator {
 						Iterator<Statement> it = currentRDF.getStatements(null, null, null).iterator();
 						if (it.hasNext()) {
 							v = it.next().getSubject();
+						} else {
+							v = plugin.vf.createBNode();
 						}
 					}
 
@@ -299,6 +328,41 @@ public class MongoResultIterator extends StatementIterator {
 			iter.close();
 			plugin.getLogger().error("Could not parse mongo document", e);
 		}
+	}
+
+	private String resolveDocumentBase(Object context) {
+		if (context instanceof Document) {
+			Document contexts = (Document) context;
+			return contexts.getString(BASE);
+		} else if (context instanceof Map) {
+			Map<String, Object> contexts = (Map<String, Object>) context;
+			return Objects.toString(contexts.get(BASE), null);
+		} else if (context instanceof String) {
+			try {
+				SimpleValueFactory.getInstance().createIRI(context.toString());
+			} catch (IllegalArgumentException e2) {
+				plugin.getLogger().warn("Context value must be an absolute URI got: {}", context);
+				// not valid IRI so should not even attempt to load the external context
+				return null;
+			}
+			try {
+				RemoteDocument remoteDocument = documentLoader.loadDocument(context.toString());
+				Object document = remoteDocument.getDocument();
+				if (document instanceof Map) {
+					Object contextValue = ((Map<String, Object>) document).get(CONTEXT);
+					if (contextValue instanceof Map) {
+						return Objects.toString(((Map<String, Object>) contextValue).get(BASE), null);
+					}
+				}
+			} catch (JsonLdError je) {
+				// cannot load the remote context
+				plugin.getLogger().warn("Could not load external context: {}", je.getMessage());
+			}
+		}
+		if (context != null) {
+			plugin.getLogger().warn("Unsupported @context type. Expected document or remote URI, got : {}", context);
+		}
+		return null;
 	}
 
 	protected boolean hasSolution() {
