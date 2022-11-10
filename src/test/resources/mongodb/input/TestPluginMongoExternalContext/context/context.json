@@ -1,5 +1,6 @@
 {
   "@context": {
+    "@base": "http://www.bbc.co.uk/",
     "bbcevent": "http://www.bbc.co.uk/ontologies/event/",
     "geo-pos": "http://www.w3.org/2003/01/geo/wgs84_pos#",
     "bbc": "http://www.bbc.co.uk/ontologies/bbc/",

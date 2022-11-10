@@ -1,8 +1,13 @@
 {
-  "@context": "http://localhost:54334/context/context.json",
+  "@context": [
+    "http://localhost:54334/context/context.json",
+    {
+      "@base": "http://www.bbc2.co.uk/"
+    }
+  ],
   "@graph": [
     {
-      "@id": "things/1646449#id",
+      "@id": "things/1646495#id",
       "@type": "cwork:NewsItem",
       "bbc:primaryContentOf": [
         {
