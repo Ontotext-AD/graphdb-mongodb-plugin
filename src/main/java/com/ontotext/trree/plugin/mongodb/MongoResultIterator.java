@@ -37,6 +37,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -331,13 +332,18 @@ public class MongoResultIterator extends StatementIterator {
 	}
 
 	private String resolveDocumentBase(Object context) {
-		if (context instanceof Document) {
-			Document contexts = (Document) context;
-			return contexts.getString(BASE);
-		} else if (context instanceof Map) {
+		return resolveDocumentBase(context, true);
+	}
+
+	private String resolveDocumentBase(Object context, boolean allowRemoteContext) {
+		if (context instanceof Map) {
 			Map<String, Object> contexts = (Map<String, Object>) context;
 			return Objects.toString(contexts.get(BASE), null);
 		} else if (context instanceof String) {
+			if (!allowRemoteContext) {
+				plugin.getLogger().error("Attempted to load the remote context '{}' from a remote context", context);
+				return null;
+			}
 			try {
 				SimpleValueFactory.getInstance().createIRI(context.toString());
 			} catch (IllegalArgumentException e2) {
@@ -350,13 +356,36 @@ public class MongoResultIterator extends StatementIterator {
 				Object document = remoteDocument.getDocument();
 				if (document instanceof Map) {
 					Object contextValue = ((Map<String, Object>) document).get(CONTEXT);
-					if (contextValue instanceof Map) {
-						return Objects.toString(((Map<String, Object>) contextValue).get(BASE), null);
-					}
+					// do not allow loading a remote context from a remote context
+					// as this could be malicious
+					return resolveDocumentBase(contextValue, false);
 				}
 			} catch (JsonLdError je) {
 				// cannot load the remote context
 				plugin.getLogger().warn("Could not load external context: {}", je.getMessage());
+			}
+		} else if (context instanceof Collection) {
+			String baseFromRemoteContext = null;
+			for (Object ctxItem : (Collection<?>) context) {
+				if (ctxItem instanceof Map) {
+					// local context
+					// if we have overridden base in the local context it's with higher priority
+					// so use it directly
+					String base = resolveDocumentBase(ctxItem, allowRemoteContext);
+					if (base != null) {
+						return base;
+					}
+				} else if (ctxItem instanceof String) {
+					// remote context will be used only if there is no base in a local context
+					baseFromRemoteContext = resolveDocumentBase(ctxItem, allowRemoteContext);
+				} else if (ctxItem != null) {
+					plugin.getLogger()
+									.warn("Unsupported @context type. Expected document or remote URI, got : {}",
+													ctxItem);
+				}
+			}
+			if (baseFromRemoteContext != null) {
+				return baseFromRemoteContext;
 			}
 		}
 		if (context != null) {
