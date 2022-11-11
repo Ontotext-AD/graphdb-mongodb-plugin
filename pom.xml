@@ -9,7 +9,7 @@
 	<description>MongoDB plugin for GraphDB</description>
 
 	<properties>
-		<graphdb.version>10.1.0-RC3</graphdb.version>
+		<graphdb.version>10.1.0</graphdb.version>
 		<dependency.check.version>6.2.2</dependency.check.version>
 
 		<java.level>1.8</java.level>
