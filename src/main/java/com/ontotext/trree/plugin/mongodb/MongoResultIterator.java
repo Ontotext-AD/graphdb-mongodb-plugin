@@ -76,6 +76,12 @@ public class MongoResultIterator extends StatementIterator {
 	private boolean modelIteratorCreated = false;
 	private boolean interrupted = false;
 	private boolean closed = false;
+	// if some of the query components are constructed with a function
+  // and set using bind the first time they are visited will be null. If we have setter with null
+  // then we can expect the value to be set later on, but the original iterator would be closed
+  // this property prevents the iterator to be closed the first time if any of the
+  // set components are null (query, hint, projection, collation, aggregation)
+	private boolean closeable = true;
 
 	public MongoResultIterator(MongoDBPlugin plugin, MongoClient client, String database, String collection, RequestCache cache, long searchsubject) {
 		this.cache = cache;
@@ -160,6 +166,12 @@ public class MongoResultIterator extends StatementIterator {
 
 	@Override
 	public void close() {
+	  if (!closeable) {
+	    // prevent closing the iterator if not fully configured
+	    closeable = true;
+	    return;
+    }
+
 		closed = true;
 		if (iter != null)
 			iter.close();
@@ -181,6 +193,7 @@ public class MongoResultIterator extends StatementIterator {
 
 	public void setQuery(String query) {
 		this.query = query;
+    closeable &= query != null;
 	}
 
 	public StatementIterator singletonIterator(long predicate, long object) {
@@ -189,6 +202,7 @@ public class MongoResultIterator extends StatementIterator {
 
 	public void setProjection(String projectionString) {
 		this.projection = projectionString;
+    closeable &= projection != null;
 	}
 
 	public StatementIterator createEntityIter(long pred) {
@@ -463,6 +477,7 @@ public class MongoResultIterator extends StatementIterator {
 
 	public void setAggregation(List<Document> aggregation) {
 		this.aggregation = aggregation;
+    closeable &= aggregation != null;
 	}
 
 	public void setGraphId(long graphId) {
@@ -496,10 +511,12 @@ public class MongoResultIterator extends StatementIterator {
 
 	public void setHint(String hintString) {
 		this.hint = hintString;
+    closeable &= hint != null;
 	}
 
 	public void setCollation(String collationString){
-		setCollation(createCollation(collationString));
+    closeable &= collationString != null;
+    setCollation(createCollation(collationString));
 	}
 
 	public Collation getCollation() {

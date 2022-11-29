@@ -176,6 +176,10 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 		verifyResult(query, resultFile, false);
 	}
 
+  protected void verifyResult(String resultFile, boolean ordered) throws Exception {
+	  verifyResult(query, RESULTS_DIR.resolve(this.getClass().getSimpleName()).resolve(resultFile).toFile(), ordered);
+  }
+
 	protected void verifyResult(String query, File resultFile, boolean ordered) throws Exception {
 		try (RepositoryConnection conn = getRepository().getConnection()) {
 

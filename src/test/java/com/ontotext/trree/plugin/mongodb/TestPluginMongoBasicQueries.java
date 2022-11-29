@@ -28,6 +28,61 @@ public class TestPluginMongoBasicQueries extends AbstractMongoBasicTest {
 		verifyUnorderedResult();
 	}
 
+  @Test
+  public void testGetResultsFromDocumentById_withValues() throws Exception {
+    query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
+            "PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
+            "select ?s ?o {\n"
+            + "\tVALUES ?query {\"{'@id' : 'bbcc:1646461#id'}\"}."
+            + "\t?search a inst:spb100 ;\n"
+            + "\t:find  ?query;"
+            + "\t:project '{ \"@context\": 1, \"cwork:about\": 1, \"@type\": 1, \"@id\" : 1, \"@graph\" : 1 }' ;"
+            + "\t:entity ?entity .\n"
+            + "\tgraph inst:spb100 {\n"
+            + "\t\t?s <http://www.bbc.co.uk/ontologies/creativework/about> ?o .\n"
+            + "\t}\n"
+            + "}";
+
+    verifyResult("testGetResultsFromDocumentById", false);
+  }
+
+  @Test
+  public void testGetResultsFromDocumentById_withBind() throws Exception {
+    query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
+            "PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
+            "select ?s ?o {\n"
+            + "BIND(\"{'@id' : 'bbcc:1646461#id'}\" as ?query)."
+            + "\t?search a inst:spb100 ;\n"
+            + "\t:find  ?query;"
+            + "\t:project '{ \"@context\": 1, \"cwork:about\": 1, \"@type\": 1, \"@id\" : 1, \"@graph\" : 1 }' ;"
+            + "\t:entity ?entity .\n"
+            + "\tgraph inst:spb100 {\n"
+            + "\t\t?s <http://www.bbc.co.uk/ontologies/creativework/about> ?o .\n"
+            + "\t}\n"
+            + "}";
+
+    verifyResult("testGetResultsFromDocumentById", false);
+  }
+
+  @Test
+  public void testGetResultsFromDocumentById_withBind2() throws Exception {
+    query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
+            "PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
+            "select ?s ?o {\n"
+            + "\tBIND(\"{'@id' : 'bbcc:1646461#id'}\" as ?query)."
+            + "\tBIND('{ \"@context\": 1, \"cwork:about\": 1, \"@type\": 1, \"@id\" : 1, \"@graph\" : 1 }' as ?projection)."
+            + "\t?search a inst:spb100 ;\n"
+            + "\t:find  ?query ;"
+            + "\t:project ?projection ;"
+            + "\t:entity ?entity .\n"
+            + "\tgraph inst:spb100 {\n"
+            + "\t\t?s <http://www.bbc.co.uk/ontologies/creativework/about> ?o .\n"
+            + "\t}\n"
+            + "}";
+
+    verifyResult("testGetResultsFromDocumentById", false);
+  }
+
 	@Test
 	public void testAggregation() throws Exception {
 		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +

@@ -243,8 +243,6 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 		if (predicate == rdf_type && context == 0) {
 			if (object >= 0)
 				return null;
-			if (subject != 0)
-				return null;
 			String suffix = Utils.matchPrefix(Utils.getString(entities, object), NAMESPACE_INST);
 			if (suffix == null)
 				return null;
@@ -364,15 +362,20 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 			return iter.singletonIterator(projectionId, object);
 		}
 		if (predicate == aggregationId) {
-			String aggregationString = Utils.getString(entities, object);
-
-			if (aggregationString == null) {
-				return StatementIterator.EMPTY;
-			}
 			if (ctx.iters == null) {
 				getLogger().error("iter not created yet");
 				return StatementIterator.EMPTY;
 			}
+
+      String aggregationString = Utils.getString(entities, object);
+
+      if (aggregationString == null) {
+        // make sure to mark the aggregate parameter as lazy set
+        // this will ensure the main iterator would not be closed before setting this.
+        MongoResultIterator iter = getIterator(subject, context, ctx);
+        iter.setAggregation(null);
+        return iter.singletonIterator(aggregationId, object);
+      }
 
 			List<Document> aggregation = new LinkedList<>();
 			try {
