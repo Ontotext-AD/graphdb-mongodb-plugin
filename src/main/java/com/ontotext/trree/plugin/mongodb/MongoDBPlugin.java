@@ -367,15 +367,15 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 				return StatementIterator.EMPTY;
 			}
 
-      String aggregationString = Utils.getString(entities, object);
+			String aggregationString = Utils.getString(entities, object);
 
-      if (aggregationString == null) {
-        // make sure to mark the aggregate parameter as lazy set
-        // this will ensure the main iterator would not be closed before setting this.
-        MongoResultIterator iter = getIterator(subject, context, ctx);
-        iter.setAggregation(null);
-        return iter.singletonIterator(aggregationId, object);
-      }
+			if (aggregationString == null) {
+				// make sure to mark the aggregate parameter as lazy set
+				// this will ensure the main iterator would not be closed before setting this.
+				MongoResultIterator iter = getIterator(subject, context, ctx);
+				iter.setAggregation(null);
+				return iter.singletonIterator(aggregationId, object);
+			}
 
 			List<Document> aggregation = new LinkedList<>();
 			try {
