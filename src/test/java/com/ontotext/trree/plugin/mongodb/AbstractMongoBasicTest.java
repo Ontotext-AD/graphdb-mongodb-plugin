@@ -127,7 +127,7 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 	/**
 	 * Executes a query and verifies the result count is correct
 	 *
-	 * @param query                query to be executed
+	 * @param query								query to be executed
 	 * @param expectedResultsCount
 	 */
 	protected void verifyResultsCount(String query, int expectedResultsCount) {
@@ -158,8 +158,8 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 	 * will wither compare the result of the query or generate new output files. <p>
 	 * As the comparison is exact one make sure you do not have any blank nodes in the result!
 	 *
-	 * @param query       query to be executed
-	 * @param resultFile file  containing the output to be compared against.
+	 * @param query			 query to be executed
+	 * @param resultFile file	containing the output to be compared against.
 	 */
 	protected void verifyOrderedResult(String query, File resultFile) throws Exception {
 		verifyResult(query, resultFile, true);
@@ -169,11 +169,15 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 	 * Executes a query verifies the output matches a given one no matter the order in which the bindings come. Depending
 	 * on the LEARN_MODE setting this method will wither compare the result of the query or generate new output files. <p>
 	 *
-	 * @param query       query to be executed
+	 * @param query			 query to be executed
 	 * @param resultFile file containing the output to be compared against.
 	 */
 	protected void verifyUnorderedResult(String query, File resultFile) throws Exception {
 		verifyResult(query, resultFile, false);
+	}
+
+	protected void verifyResult(String resultFile, boolean ordered) throws Exception {
+		verifyResult(query, RESULTS_DIR.resolve(this.getClass().getSimpleName()).resolve(resultFile).toFile(), ordered);
 	}
 
 	protected void verifyResult(String query, File resultFile, boolean ordered) throws Exception {
@@ -258,8 +262,8 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 	/**
 	 * Determines whether the methods which compare query results against given output generate the output or do the
 	 * actual comparing<p>
-	 *     When running the actual tests this should always return false and can be set to true only when writing new
-	 *     test cases.
+	 *		 When running the actual tests this should always return false and can be set to true only when writing new
+	 *		 test cases.
 	 * @return
 	 */
 	protected boolean isLearnMode() {
