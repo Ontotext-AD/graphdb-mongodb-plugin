@@ -516,7 +516,9 @@ public class MongoResultIterator extends StatementIterator {
 
 	public void setCollation(String collationString){
 		closeable &= collationString != null;
-		setCollation(createCollation(collationString));
+		if (collationString != null) {
+			setCollation(createCollation(collationString));
+		}
 	}
 
 	public Collation getCollation() {
