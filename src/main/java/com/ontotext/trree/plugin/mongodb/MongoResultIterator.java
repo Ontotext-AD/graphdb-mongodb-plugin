@@ -238,7 +238,7 @@ public class MongoResultIterator extends StatementIterator {
 
 		if (interrupted)
 			return;
-		
+
 		String entity = null;
 		if (doc.containsKey(GRAPH)) {
 			Object item = doc.get(GRAPH);
@@ -291,8 +291,12 @@ public class MongoResultIterator extends StatementIterator {
 			EncoderWrapper encoderWrapper = new EncoderWrapper(new DocumentCodec());
 			String json = doc.toJson(jsonWriterSettings, encoderWrapper);
 			StringReader reader = new StringReader(json);
+			ParserConfig config = jsonLdParserConfig;
+			config.set(JSONLDSettings.DOCUMENT_LOADER, null);
+			config.set(JSONLDSettings.SECURE_MODE, false);
 
-			currentRDF = Rio.parse(reader, docBase, RDFFormat.JSONLD, jsonLdParserConfig,
+
+			currentRDF = Rio.parse(reader, docBase, RDFFormat.JSONLD, config,
 							SimpleValueFactory.getInstance(), new ParseErrorLogger());
 
 			Resource v = null;
