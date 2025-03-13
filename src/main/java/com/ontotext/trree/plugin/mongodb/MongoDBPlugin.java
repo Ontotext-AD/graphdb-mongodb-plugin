@@ -117,7 +117,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 		}
 
 		public void addContext(long ctx) {
-			contexts.add(Long.valueOf(ctx));
+			contexts.add(ctx);
 		}
 
 		public Set<Long> getContexts() {
@@ -200,7 +200,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 		if (predicate == entityId) {
 			return 0.52;
 		}
-		if (ctx != null && ctx.iters != null && ctx.getContexts().contains(Optional.of(context))) {
+		if (ctx != null && ctx.iters != null && ctx.getContexts().contains(context)) {
 			return 0.6;
 		}
 		return 0;
