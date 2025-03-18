@@ -10,11 +10,9 @@ public class TestPluginMongoKeysEscaping extends AbstractMongoBasicTest {
 	protected void loadData() {
 		loadFilesToMongo();
 	}
-
 	/**
-	 * Mongo does not support "." and "$" (as first char) in the keys of the documents. We support encoding the keys
-	 * so we can have full URIs as keys and predicates starting with $ (for whatever reason we would want that). In the
-	 * JSON-LDs only the keys should be decoded and the values should be returned as they are in the mongo document.
+	 * Mongo does not support "." and "$" (as first char) in the keys of the documents. In the
+	 * JSON-LDs all keys should be decoded and the values should be returned as they are in the mongo document.
 	 */
 	@Test
 	public void testOnlyKeysAreDecoded() throws Exception {
