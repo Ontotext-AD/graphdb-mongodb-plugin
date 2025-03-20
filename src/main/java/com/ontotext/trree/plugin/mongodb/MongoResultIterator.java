@@ -1,7 +1,10 @@
 package com.ontotext.trree.plugin.mongodb;
 
-import static no.hasmac.jsonld.lang.Keywords.*;
+import static com.apicatalog.jsonld.lang.Keywords.*;
 
+import com.apicatalog.jsonld.JsonLdError;
+import com.apicatalog.jsonld.document.JsonDocument;
+import com.apicatalog.jsonld.loader.DocumentLoaderOptions;
 import com.mongodb.MongoSecurityException;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Collation;
@@ -9,6 +12,8 @@ import com.mongodb.client.model.CollationAlternate;
 import com.mongodb.client.model.CollationCaseFirst;
 import com.mongodb.client.model.CollationMaxVariable;
 import com.mongodb.client.model.CollationStrength;
+import com.ontotext.forest.core.jsonld.GraphDBJSONLD11ParserFactory;
+import com.ontotext.forest.core.jsonld.settings.GraphDBJSONLDSettings;
 import com.ontotext.trree.sdk.Entities;
 import com.ontotext.trree.sdk.Entities.Scope;
 import com.ontotext.trree.sdk.PluginException;
@@ -21,20 +26,11 @@ import org.bson.json.JsonMode;
 import org.bson.json.JsonWriterSettings;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.rio.ParserConfig;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.RDFParseException;
-import org.eclipse.rdf4j.rio.Rio;
-import org.eclipse.rdf4j.rio.UnsupportedRDFormatException;
+import org.eclipse.rdf4j.rio.*;
 import org.eclipse.rdf4j.rio.helpers.ParseErrorLogger;
-
-import no.hasmac.jsonld.JsonLdError;
-import no.hasmac.jsonld.document.JsonDocument;
-import no.hasmac.jsonld.loader.DocumentLoaderOptions;
 
 import jakarta.json.JsonString;
 import jakarta.json.JsonStructure;
-import org.eclipse.rdf4j.rio.jsonld.JSONLDSettings;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -83,6 +79,11 @@ public class MongoResultIterator extends StatementIterator {
 	// set components are null (query, hint, projection, collation, aggregation)
 	private boolean closeable = true;
 
+	static {
+		GraphDBJSONLD11ParserFactory jsonldFactory = new GraphDBJSONLD11ParserFactory();
+		RDFParserRegistry.getInstance().add(jsonldFactory);
+	}
+
 	public MongoResultIterator(MongoDBPlugin plugin, MongoClient client, String database, String collection, RequestCache cache, long searchsubject) {
 		this.cache = cache;
 		this.plugin = plugin;
@@ -95,7 +96,7 @@ public class MongoResultIterator extends StatementIterator {
 		// this way we would not accumulate a lot of documents over time
 		jsonLdParserConfig = new ParserConfig();
 		documentLoader = new CachingDocumentLoader();
-		jsonLdParserConfig.set(JSONLDSettings.DOCUMENT_LOADER, documentLoader);
+		jsonLdParserConfig.set(GraphDBJSONLDSettings.DOCUMENT_LOADER, documentLoader);
 	}
 
 	@Override
@@ -188,7 +189,7 @@ public class MongoResultIterator extends StatementIterator {
 		initialized = false;
 		initializedByEntityIterator = false;
 
-		IOUtils.closeQuietly((Closeable) jsonLdParserConfig.get(JSONLDSettings.DOCUMENT_LOADER));
+		IOUtils.closeQuietly((Closeable) jsonLdParserConfig.get(GraphDBJSONLDSettings.DOCUMENT_LOADER));
 	}
 
 	public void setQuery(String query) {

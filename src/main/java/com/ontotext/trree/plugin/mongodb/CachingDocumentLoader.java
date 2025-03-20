@@ -1,11 +1,10 @@
 package com.ontotext.trree.plugin.mongodb;
 
-import no.hasmac.jsonld.JsonLdError;
-import no.hasmac.jsonld.JsonLdErrorCode;
-import no.hasmac.jsonld.document.Document;
-import no.hasmac.jsonld.loader.DocumentLoader;
-import no.hasmac.jsonld.loader.DocumentLoaderOptions;
-import no.hasmac.jsonld.loader.SchemeRouter;
+import com.apicatalog.jsonld.JsonLdError;
+import com.apicatalog.jsonld.JsonLdErrorCode;
+import com.apicatalog.jsonld.document.Document;
+import com.apicatalog.jsonld.loader.DocumentLoader;
+import com.apicatalog.jsonld.loader.SchemeRouter;
 
 import java.io.Closeable;
 import java.net.URI;
@@ -32,12 +31,12 @@ public class CachingDocumentLoader implements DocumentLoader, Closeable {
   };
 
   @Override
-  public Document loadDocument(URI uri, DocumentLoaderOptions options) throws JsonLdError {
+  public Document loadDocument(URI uri, com.apicatalog.jsonld.loader.DocumentLoaderOptions options) throws JsonLdError {
     if (documentCache.containsKey(uri)) {
       try {
         return documentCache.get(uri);
       } catch (final Exception e) {
-        throw new JsonLdError(JsonLdErrorCode.LOADING_DOCUMENT_FAILED, uri + e.getMessage());
+        throw new JsonLdError(JsonLdErrorCode.LOADING_DOCUMENT_FAILED, uri + " " + e.getMessage());
       }
     } else {
       final String disallowRemote = System
@@ -52,7 +51,7 @@ public class CachingDocumentLoader implements DocumentLoader, Closeable {
         documentCache.put(uri, remoteDocument);
         return remoteDocument;
       } catch (final Exception e) {
-        throw new JsonLdError(JsonLdErrorCode.LOADING_REMOTE_CONTEXT_FAILED, uri + e.getMessage());
+        throw new JsonLdError(JsonLdErrorCode.LOADING_REMOTE_CONTEXT_FAILED, uri + " " + e.getMessage());
       }
     }
   }

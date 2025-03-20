@@ -123,15 +123,15 @@
 
 		<dependency>
 			<groupId>com.ontotext.graphdb</groupId>
-			<artifactId>graphdb-sdk</artifactId>
+			<artifactId>graphdb-framework-core</artifactId>
 			<version>${graphdb.version}</version>
-			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
-			<groupId>no.hasmac</groupId>
-			<artifactId>hasmac-json-ld</artifactId>
-			<version>${jsonld.hasmac.version}</version>
+			<groupId>com.ontotext.graphdb</groupId>
+			<artifactId>graphdb-sdk</artifactId>
+			<version>${graphdb.version}</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
@@ -144,6 +144,10 @@
 				<exclusion>
 					<groupId>it.unibz.inf.ontop</groupId>
 					<artifactId>*</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>no.hasmac</groupId>
+					<artifactId>hasmac-json-ld</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -158,6 +162,10 @@
 				<exclusion>
 					<groupId>it.unibz.inf.ontop</groupId>
 					<artifactId>*</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>no.hasmac</groupId>
+					<artifactId>hasmac-json-ld</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
