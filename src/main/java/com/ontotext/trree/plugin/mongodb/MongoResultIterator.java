@@ -1,12 +1,7 @@
 package com.ontotext.trree.plugin.mongodb;
 
-import static com.github.jsonldjava.core.JsonLdConsts.BASE;
-import static com.github.jsonldjava.core.JsonLdConsts.CONTEXT;
-import static com.github.jsonldjava.core.JsonLdConsts.GRAPH;
-import static com.github.jsonldjava.core.JsonLdConsts.ID;
+import static no.hasmac.jsonld.lang.Keywords.*;
 
-import com.github.jsonldjava.core.JsonLdError;
-import com.github.jsonldjava.core.RemoteDocument;
 import com.mongodb.MongoSecurityException;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Collation;
@@ -18,6 +13,7 @@ import com.ontotext.trree.sdk.Entities;
 import com.ontotext.trree.sdk.Entities.Scope;
 import com.ontotext.trree.sdk.PluginException;
 import com.ontotext.trree.sdk.StatementIterator;
+
 import org.apache.commons.io.IOUtils;
 import org.bson.Document;
 import org.bson.codecs.DocumentCodec;
@@ -30,18 +26,22 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.rio.UnsupportedRDFormatException;
-import org.eclipse.rdf4j.rio.helpers.JSONLDSettings;
 import org.eclipse.rdf4j.rio.helpers.ParseErrorLogger;
+
+import no.hasmac.jsonld.JsonLdError;
+import no.hasmac.jsonld.document.JsonDocument;
+import no.hasmac.jsonld.loader.DocumentLoaderOptions;
+
+import jakarta.json.JsonString;
+import jakarta.json.JsonStructure;
+import org.eclipse.rdf4j.rio.jsonld.JSONLDSettings;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.net.URI;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class MongoResultIterator extends StatementIterator {
 
@@ -291,12 +291,8 @@ public class MongoResultIterator extends StatementIterator {
 			EncoderWrapper encoderWrapper = new EncoderWrapper(new DocumentCodec());
 			String json = doc.toJson(jsonWriterSettings, encoderWrapper);
 			StringReader reader = new StringReader(json);
-			ParserConfig config = jsonLdParserConfig;
-			config.set(JSONLDSettings.DOCUMENT_LOADER, null);
-			config.set(JSONLDSettings.SECURE_MODE, false);
 
-
-			currentRDF = Rio.parse(reader, docBase, RDFFormat.JSONLD, config,
+			currentRDF = Rio.parse(reader, docBase, RDFFormat.JSONLD, jsonLdParserConfig,
 							SimpleValueFactory.getInstance(), new ParseErrorLogger());
 
 			Resource v = null;
@@ -370,10 +366,12 @@ public class MongoResultIterator extends StatementIterator {
 				return null;
 			}
 			try {
-				RemoteDocument remoteDocument = documentLoader.loadDocument(context.toString());
-				Object document = remoteDocument.getDocument();
-				if (document instanceof Map) {
-					Object contextValue = ((Map<String, Object>) document).get(CONTEXT);
+				Optional<JsonStructure> document = ((JsonDocument) documentLoader.loadDocument(URI.create(context.toString()), new DocumentLoaderOptions())).getJsonContent();
+				JsonStructure jsonStructure = document.get();
+				if (jsonStructure instanceof Map) {
+					// When parsing JSON-LD documents using hasmac's library, string values are
+					// wrapped inside 'JsonString' objects, which include extra surrounding double quotes
+					Object contextValue = removeExtraQuotes(((Map<String, Object>) jsonStructure).get(CONTEXT));
 					// do not allow loading a remote context from a remote context
 					// as this could be malicious
 					return resolveDocumentBase(contextValue, false);
@@ -381,8 +379,8 @@ public class MongoResultIterator extends StatementIterator {
 			} catch (JsonLdError je) {
 				// cannot load the remote context
 				plugin.getLogger().warn("Could not load external context: {}", je.getMessage());
-			}
-		} else if (context instanceof Collection) {
+            }
+        } else if (context instanceof Collection) {
 			String baseFromRemoteContext = null;
 			for (Object ctxItem : (Collection<?>) context) {
 				if (ctxItem instanceof Map) {
@@ -414,6 +412,18 @@ public class MongoResultIterator extends StatementIterator {
 
 	protected boolean hasSolution() {
 		return !interrupted && iter != null && iter.hasNext();
+	}
+
+	private Object removeExtraQuotes(Object value) {
+		if (value instanceof JsonString) {
+			// remove surrounding double quotes
+			return value.toString().replaceAll("^\"+|\"+$", "");
+		} else if (value instanceof Map) {
+			Map<String, Object> map = (Map<String, Object>) value;
+			return map.entrySet().stream()
+					.collect(Collectors.toMap(Map.Entry::getKey, e -> removeExtraQuotes(e.getValue())));
+		}
+		return value;
 	}
 
 	public StatementIterator getModelIterator(final long subject, final long predicate, final long object) {
