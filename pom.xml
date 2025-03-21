@@ -9,7 +9,7 @@
 	<description>MongoDB plugin for GraphDB</description>
 
 	<properties>
-		<graphdb.version>11.0.0-TR9</graphdb.version>
+		<graphdb.version>11.0.0-TR18</graphdb.version>
 		<dependency.check.version>6.2.2</dependency.check.version>
 		<jsonld.hasmac.version>0.9.0</jsonld.hasmac.version>
 

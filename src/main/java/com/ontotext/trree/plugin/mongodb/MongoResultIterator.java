@@ -367,8 +367,10 @@ public class MongoResultIterator extends StatementIterator {
 				return null;
 			}
 			try {
-				Optional<JsonStructure> document = ((JsonDocument) documentLoader.loadDocument(URI.create(context.toString()), new DocumentLoaderOptions())).getJsonContent();
-				JsonStructure jsonStructure = document.get();
+				JsonStructure jsonStructure = ((JsonDocument) documentLoader
+						.loadDocument(URI.create(context.toString()), new DocumentLoaderOptions()))
+						.getJsonContent()
+						.orElse(null);
 				if (jsonStructure instanceof Map) {
 					// When parsing JSON-LD documents using hasmac's library, string values are
 					// wrapped inside 'JsonString' objects, which include extra surrounding double quotes
@@ -423,6 +425,12 @@ public class MongoResultIterator extends StatementIterator {
 			Map<String, Object> map = (Map<String, Object>) value;
 			return map.entrySet().stream()
 					.collect(Collectors.toMap(Map.Entry::getKey, e -> removeExtraQuotes(e.getValue())));
+		} else if (value instanceof List) {
+			// Recursively process lists
+			List<Object> list = (List<Object>) value;
+			return list.stream()
+					.map(v -> removeExtraQuotes(v))
+					.collect(Collectors.toList());
 		}
 		return value;
 	}
