@@ -426,7 +426,6 @@ public class MongoResultIterator extends StatementIterator {
 			return map.entrySet().stream()
 					.collect(Collectors.toMap(Map.Entry::getKey, e -> removeExtraQuotes(e.getValue())));
 		} else if (value instanceof List) {
-			// Recursively process lists
 			List<Object> list = (List<Object>) value;
 			return list.stream()
 					.map(v -> removeExtraQuotes(v))
