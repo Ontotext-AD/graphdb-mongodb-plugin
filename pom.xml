@@ -10,7 +10,7 @@
 
 	<properties>
 		<graphdb.version>11.0.0-TR18</graphdb.version>
-		<dependency.check.version>6.2.2</dependency.check.version>
+		<dependency.check.version>12.1.0</dependency.check.version>
 
 		<java.level>1.8</java.level>
 
@@ -130,6 +130,12 @@
 			<groupId>com.ontotext.graphdb</groupId>
 			<artifactId>graphdb-sdk</artifactId>
 			<version>${graphdb.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.rdf4j</groupId>
+					<artifactId>rdf4j-rio-jsonld</artifactId>
+				</exclusion>
+			</exclusions>
 			<scope>provided</scope>
 		</dependency>
 
@@ -145,8 +151,8 @@
 					<artifactId>*</artifactId>
 				</exclusion>
 				<exclusion>
-					<groupId>no.hasmac</groupId>
-					<artifactId>hasmac-json-ld</artifactId>
+					<groupId>org.eclipse.rdf4j</groupId>
+					<artifactId>rdf4j-rio-jsonld</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
@@ -163,8 +169,8 @@
 					<artifactId>*</artifactId>
 				</exclusion>
 				<exclusion>
-					<groupId>no.hasmac</groupId>
-					<artifactId>hasmac-json-ld</artifactId>
+					<groupId>org.eclipse.rdf4j</groupId>
+					<artifactId>rdf4j-rio-jsonld</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
