@@ -9,8 +9,8 @@
 	<description>MongoDB plugin for GraphDB</description>
 
 	<properties>
-		<graphdb.version>10.1.0</graphdb.version>
-		<dependency.check.version>6.2.2</dependency.check.version>
+		<graphdb.version>11.0.0-TR18</graphdb.version>
+		<dependency.check.version>12.1.0</dependency.check.version>
 
 		<java.level>1.8</java.level>
 
@@ -122,8 +122,20 @@
 
 		<dependency>
 			<groupId>com.ontotext.graphdb</groupId>
+			<artifactId>graphdb-framework-core</artifactId>
+			<version>${graphdb.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.ontotext.graphdb</groupId>
 			<artifactId>graphdb-sdk</artifactId>
 			<version>${graphdb.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.rdf4j</groupId>
+					<artifactId>rdf4j-rio-jsonld</artifactId>
+				</exclusion>
+			</exclusions>
 			<scope>provided</scope>
 		</dependency>
 
@@ -138,6 +150,10 @@
 					<groupId>it.unibz.inf.ontop</groupId>
 					<artifactId>*</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>org.eclipse.rdf4j</groupId>
+					<artifactId>rdf4j-rio-jsonld</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 
@@ -151,6 +167,10 @@
 				<exclusion>
 					<groupId>it.unibz.inf.ontop</groupId>
 					<artifactId>*</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.eclipse.rdf4j</groupId>
+					<artifactId>rdf4j-rio-jsonld</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>

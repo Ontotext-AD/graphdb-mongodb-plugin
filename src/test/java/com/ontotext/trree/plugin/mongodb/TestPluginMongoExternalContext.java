@@ -67,7 +67,7 @@ public class TestPluginMongoExternalContext extends AbstractMongoBasicTest {
   private static HttpRequestHandler buildContextResponse() {
     return (httpRequest, httpResponse, httpContext) -> {
       hitCount.incrementAndGet();
-      httpResponse.addHeader(HttpHeaders.CONTENT_TYPE, "application/ld-json");
+      httpResponse.addHeader(HttpHeaders.CONTENT_TYPE, "application/ld+json");
       httpResponse.setStatusCode(200);
       BasicHttpEntity entity = new BasicHttpEntity();
       File contextFile = INPUT_DIR.resolve(

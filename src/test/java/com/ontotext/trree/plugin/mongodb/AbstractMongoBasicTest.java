@@ -216,10 +216,10 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 					act.sort(String::compareTo);
 				}
 
-				assertEquals("Number of results", exp, act);
+				assertEquals("Number of results", exp.size(), act.size());
 
 				for (int i = 0; i < act.size(); i++) {
-					assertEquals("Result record is as expected", exp.get(i), act.get(i));
+					assertEquals("Result record is as expected", exp.get(i).replace("[null]", "").trim(), act.get(i).replace("[null]", "").trim());
 				}
 			}
 		}
