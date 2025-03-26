@@ -22,6 +22,7 @@ import org.bson.Document;
 import org.bson.codecs.DocumentCodec;
 import org.bson.json.JsonMode;
 import org.bson.json.JsonWriterSettings;
+import org.eclipse.collections.api.iterator.LongIterator;
 import org.eclipse.rdf4j.model.*;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.rio.*;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class MongoResultIterator extends StatementIterator {
@@ -45,20 +47,20 @@ public class MongoResultIterator extends StatementIterator {
 	private String query, projection, hint, database, collection;
 	private Collation collation;
 	private List<Document> aggregation = null;
-	private long searchSubject;
+	protected long searchSubject;
 	// custom graph id, if not present should equal to indexId
 	private long graphId;
 	// the id of the index, could be shared among multiple iterators
 	private long indexId;
-	private boolean initialized = false;
-	private boolean initializedByEntityIterator = false;
+	protected boolean initialized = false;
+	protected boolean initializedByEntityIterator = false;
 	private boolean searchDone = false;
 	private MongoClient client;
 	private MongoDatabase db;
 	private MongoCollection<Document> coll;
-	private MongoCursor<Document> iter;
-	private Model currentRDF;
-	private Entities entities;
+	protected MongoCursor<Document> iter;
+	protected Model currentRDF;
+	protected Entities entities;
 	private MongoDBPlugin plugin;
 	private RequestCache cache;
 
@@ -69,7 +71,7 @@ public class MongoResultIterator extends StatementIterator {
 	private boolean cloned = false;
 	private boolean entityIteratorCreated = false;
 	private boolean modelIteratorCreated = false;
-	private boolean interrupted = false;
+	protected boolean interrupted = false;
 	private boolean closed = false;
 	// if some of the query components are constructed with a function
 	// and set using bind the first time they are visited will be null. If we have setter with null
@@ -77,6 +79,12 @@ public class MongoResultIterator extends StatementIterator {
 	// this property prevents the iterator to be closed the first time if any of the
 	// set components are null (query, hint, projection, collation, aggregation)
 	private boolean closeable = true;
+
+	private boolean batched = false;
+	private boolean batchedLoading = false;
+	private int documentsLimit;
+	private BatchDocumentStore batchDocumentStore;
+	private LongIterator storeIterator;
 
 	public MongoResultIterator(MongoDBPlugin plugin, MongoClient client, String database, String collection, RequestCache cache, long searchsubject) {
 		this.cache = cache;
@@ -156,7 +164,31 @@ public class MongoResultIterator extends StatementIterator {
 			plugin.getLogger().error("Could not connect to mongo", ex);
 			throw new PluginException("Could not connect to MongoDB. Please make sure you are using correct authentication. " + ex.getMessage());
 		}
+		if (batched) {
+			if (iter != null && iter.hasNext()) {
+				batchDocumentStore = new BatchDocumentStore();
+				loadBatchedData();
+				storeIterator = batchDocumentStore.getIterator();
+				this.currentRDF = batchDocumentStore.getData();
+			}
+			return batchDocumentStore.size() > 0;
+		}
 		return iter != null && iter.hasNext();
+	}
+
+	private void loadBatchedData() {
+		Model[] data = new Model[1];
+		batchedLoading = true;
+		try {
+			while (hasSolution() && batchDocumentStore.size() <= getDocumentsLimit()) {
+				long docId = readNextDocument(current -> data[0] = current);
+				if (docId != 0) {
+					batchDocumentStore.addDocument(docId, data[0]);
+				}
+			}
+		} finally {
+			batchedLoading = false;
+		}
 	}
 
 	@Override
@@ -184,6 +216,11 @@ public class MongoResultIterator extends StatementIterator {
 		initializedByEntityIterator = false;
 
 		IOUtils.closeQuietly((Closeable) jsonLdParserConfig.get(JSONLDSettings.DOCUMENT_LOADER));
+
+		if (batchDocumentStore != null) {
+			batchDocumentStore.clear();
+			batchDocumentStore = null;
+		}
 	}
 
 	public void setQuery(String query) {
@@ -228,12 +265,24 @@ public class MongoResultIterator extends StatementIterator {
 		};
 	}
 
-	private void advance() {
+	protected void advance() {
+		if (batched) {
+			this.object = storeIterator.next();
+		} else {
+			long id = readNextDocument(doc -> currentRDF = doc);
+			if (id > 0) {
+				object = id;
+			}
+		}
+	}
+
+	protected long readNextDocument(Consumer<Model> dataAccumulator) {
 		Document doc = iter.next();
 
-		if (interrupted)
-			return;
-
+		if (interrupted) {
+			return 0;
+		}
+		
 		String entity = null;
 		if (doc.containsKey(GRAPH)) {
 			Object item = doc.get(GRAPH);
@@ -326,17 +375,18 @@ public class MongoResultIterator extends StatementIterator {
 			if (id == 0) {
 				id = entities.put(v, Scope.REQUEST);
 			}
-			this.object = id;
-
 			Object customNode = doc.get(CUSTOM_NODE);
 			if (customNode instanceof Document) {
 				for (Map.Entry<String, Object> val : ((Document) customNode).entrySet()) {
 					currentRDF.add(v, plugin.vf.createIRI(MongoDBPlugin.NAMESPACE_INST, val.getKey()), plugin.vf.createLiteral(val.getValue().toString()));
 				}
 			}
+			dataAccumulator.accept(currentRDF);
+			return id;
 		} catch (RDFParseException | UnsupportedRDFormatException | IOException e) {
 			iter.close();
 			plugin.getLogger().error("Could not parse mongo document", e);
+			return 0;
 		}
 	}
 
@@ -408,6 +458,9 @@ public class MongoResultIterator extends StatementIterator {
 	}
 
 	protected boolean hasSolution() {
+		if (batched && !batchedLoading) {
+			return !interrupted && storeIterator != null && storeIterator.hasNext();
+		}
 		return !interrupted && iter != null && iter.hasNext();
 	}
 
@@ -515,6 +568,17 @@ public class MongoResultIterator extends StatementIterator {
 
 	public void setIndexId(long indexId) {
 		this.indexId = indexId;
+	}
+
+	public void setDocumentsLimit(int documentsLimit) {
+		if (documentsLimit > 0) {
+			batched = true;
+		}
+		this.documentsLimit = documentsLimit;
+	}
+
+	public int getDocumentsLimit() {
+		return documentsLimit;
 	}
 
 	public long getSearchSubject() {
@@ -642,6 +706,9 @@ public class MongoResultIterator extends StatementIterator {
 		hint = null;
 		modelIteratorCreated = false;
 		entityIteratorCreated = false;
+		if (batched) {
+			batchDocumentStore.clear();
+		}
 	}
 
 	public boolean isCloned() {
