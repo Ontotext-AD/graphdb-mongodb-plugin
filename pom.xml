@@ -9,7 +9,7 @@
 	<description>MongoDB plugin for GraphDB</description>
 
 	<properties>
-		<graphdb.version>11.0.0-TR18</graphdb.version>
+		<graphdb.version>11.0.0-RC3</graphdb.version>
 		<dependency.check.version>12.1.0</dependency.check.version>
 
 		<java.level>1.8</java.level>
@@ -124,13 +124,18 @@
 			<groupId>com.ontotext.graphdb</groupId>
 			<artifactId>graphdb-sdk</artifactId>
 			<version>${graphdb.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.eclipse.rdf4j</groupId>
+					<artifactId>rdf4j-rio-jsonld</artifactId>
+				</exclusion>
+			</exclusions>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>com.ontotext.graphdb</groupId>
 			<artifactId>graphdb-runtime</artifactId>
-			<scope>test</scope>
 			<version>${graphdb.version}</version>
 			<!-- Temporary workaround for missing Ontop dependencies for Ontotext build of Ontop -->
 			<exclusions>
@@ -139,6 +144,7 @@
 					<artifactId>*</artifactId>
 				</exclusion>
 			</exclusions>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
