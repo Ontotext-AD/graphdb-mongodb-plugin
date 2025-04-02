@@ -1,11 +1,11 @@
 package com.ontotext.trree.plugin.mongodb;
 
-import no.hasmac.jsonld.JsonLdError;
-import no.hasmac.jsonld.JsonLdErrorCode;
-import no.hasmac.jsonld.document.Document;
-import no.hasmac.jsonld.loader.DocumentLoader;
-import no.hasmac.jsonld.loader.DocumentLoaderOptions;
-import no.hasmac.jsonld.loader.SchemeRouter;
+import com.apicatalog.jsonld.JsonLdError;
+import com.apicatalog.jsonld.JsonLdErrorCode;
+import com.apicatalog.jsonld.document.Document;
+import com.apicatalog.jsonld.loader.DocumentLoader;
+import com.apicatalog.jsonld.loader.DocumentLoaderOptions;
+import com.apicatalog.jsonld.loader.SchemeRouter;
 
 import java.io.Closeable;
 import java.net.URI;
