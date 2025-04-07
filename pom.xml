@@ -4,7 +4,7 @@
 
 	<groupId>com.ontotext.graphdb.plugins</groupId>
 	<artifactId>mongodb-plugin</artifactId>
-	<version>1.1-SNAPSHOT</version>
+	<version>1.1.0</version>
 	<name>MongoDB Plugin</name>
 	<description>MongoDB plugin for GraphDB</description>
 
@@ -243,7 +243,7 @@
 		<connection>scm:git:git@github.com:Ontotext-AD/graphdb-mongodb-plugin.git</connection>
 		<developerConnection>scm:git:git@github.com:Ontotext-AD/graphdb-mongodb-plugin.git</developerConnection>
 		<url>https://github.com/Ontotext-AD/graphdb-mongodb-plugin</url>
-		<tag>HEAD</tag>
+		<tag>1.1.0</tag>
 	</scm>
 
 </project>
