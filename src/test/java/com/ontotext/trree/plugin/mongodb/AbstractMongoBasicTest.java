@@ -277,6 +277,9 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 			for (Document doc : documents) {
 				ObjectId id = doc.getObjectId("_id");
 				List<Map<String, Object>> graph = (List<Map<String, Object>>) doc.get("@graph");
+				if (graph == null) {
+					continue;
+				}
 
 				for (Map.Entry currentValue : graph.get(0).entrySet()) {
 					Object object = graph.get(0).get(currentValue.getKey());
