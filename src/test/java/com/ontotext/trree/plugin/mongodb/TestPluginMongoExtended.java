@@ -17,12 +17,11 @@ public class TestPluginMongoExtended extends AbstractMongoBasicTest {
 	 */
 	@Test
 	public void testJsonLdWithAndWithoutContexts() {
-
-		String query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
-				"PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
-				"select distinct ?entity {\n"
+		String query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n"
+		        + "PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n"
+		        + "select distinct ?entity {\n"
 				+ "\t?search a inst:spb100 ;\n"
-				+ "\t:find \"{}\" ;"
+				+ "\t:find \"{}\" ;\n"
 				+ "\t:entity ?entity .\n"
 				+ "\tgraph inst:spb100 {\n"
 				+ "\t\t?s ?p ?o .\n"

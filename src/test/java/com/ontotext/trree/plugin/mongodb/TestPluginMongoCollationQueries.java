@@ -1,14 +1,10 @@
 package com.ontotext.trree.plugin.mongodb;
 
-import java.util.Arrays;
-import java.util.List;
-
-import org.eclipse.rdf4j.repository.config.RepositoryConfig;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import com.ontotext.test.utils.StandardUtils;
-
-import static org.junit.Assert.assertEquals;
+import org.eclipse.rdf4j.repository.config.RepositoryConfig;
+import org.junit.Test;
 
 public class TestPluginMongoCollationQueries extends AbstractMongoBasicTest {
 
