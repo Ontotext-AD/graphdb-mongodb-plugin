@@ -18,5 +18,22 @@ External plugins are installed under `lib/plugins` in the GraphDB distribution
 directory. To install the plugin follow these steps:
 
 1. Remove the directory containing another version of the plugin from `lib/plugins` (e.g. `mongodb-plugin`).
-1. Unzip the built zip file in `lib/plugins`.
-1. Restart GraphDB. 
+2. Unzip the built zip file in `lib/plugins`.
+3. Restart GraphDB. 
+
+## Releases & Branches
+
+### Master
+
+Currently the `master` branch is used for releases compatible with the latest versions of GraphDB. This means that the
+changes should be compatible with the GraphDB SDK, Java, RDF4J, etc.
+
+### Releases/GraphDB-10.8.x
+
+There is a protected branch called `releases/graphdb-10.8.x`, which is used for plugin releases that have to be
+compatible with GraphDB 10.8.
+
+The branch is compatible with older version of the GraphDB SDK, Java 11 and RDF4J 4.
+
+The need for such branch comes from the fact that we still support some of the older GraphDB versions and sometimes we
+have to port a fix or functionality required by clients.

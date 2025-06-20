@@ -273,12 +273,9 @@ public class MongoResultIterator extends StatementIterator {
 
 	protected void advance() {
 		if (batched) {
-			this.object = storeIterator.next();
+			object = storeIterator.next();
 		} else {
-			long id = readNextDocument(doc -> currentRDF = doc);
-			if (id > 0) {
-				object = id;
-			}
+			object = readNextDocument(doc -> currentRDF = doc);
 		}
 	}
 

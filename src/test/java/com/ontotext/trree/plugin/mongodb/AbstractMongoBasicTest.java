@@ -1,22 +1,13 @@
 package com.ontotext.trree.plugin.mongodb;
 
+import static org.junit.Assert.assertEquals;
+
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.ontotext.graphdb.Config;
 import com.ontotext.test.TemporaryLocalFolder;
-import org.bson.BsonArray;
-import org.bson.BsonValue;
-import org.bson.Document;
-import org.bson.conversions.Bson;
-import org.bson.types.ObjectId;
-import org.eclipse.rdf4j.query.GraphQuery;
-import org.eclipse.rdf4j.query.QueryResult;
-import org.eclipse.rdf4j.query.TupleQueryResult;
-import org.eclipse.rdf4j.repository.RepositoryConnection;
-import org.junit.*;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -32,8 +23,21 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
+import java.util.Map.Entry;
+import org.bson.BsonArray;
+import org.bson.BsonValue;
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
+import org.eclipse.rdf4j.query.GraphQuery;
+import org.eclipse.rdf4j.query.QueryResult;
+import org.eclipse.rdf4j.query.TupleQueryResult;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 
 /**
  * Convenient test case for the scenario: upload date to mongo, query it, verify the result.
@@ -65,6 +69,7 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 			INPUT_DIR = Paths.get("src", "test", "resources", "mongodb", "input");
 		}
 	}
+
 	protected static Path RESULTS_DIR;
 	static {
 		try {
@@ -108,6 +113,7 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 	}
 
 	@Before
+	@Override
 	public void setup() {
 		super.setup();
 
@@ -116,6 +122,7 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 	}
 
 	@After
+	@Override
 	public void cleanup() {
 		disconnectFromMongoDB();
 		collection.drop();
@@ -127,30 +134,36 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 	/**
 	 * Executes a query and verifies the result count is correct
 	 *
-	 * @param query								query to be executed
-	 * @param expectedResultsCount
+	 * @param query to be executed
+	 * @param expectedResultsCount the results count
 	 */
 	protected void verifyResultsCount(String query, int expectedResultsCount) {
 		try (RepositoryConnection conn = getRepository().getConnection()) {
 
-			TupleQueryResult iter = conn.prepareTupleQuery(query).evaluate();
+			TupleQueryResult result = conn.prepareTupleQuery(query).evaluate();
 
 			int countResults = 0;
-			while (iter.hasNext()) {
-				iter.next();
+			while (result.hasNext()) {
+				result.next();
 				countResults++;
 			}
 
-			assertEquals("Iterator should return four results but were " + countResults, expectedResultsCount, countResults);
+			assertEquals("The results count differs", expectedResultsCount, countResults);
 		}
 	}
 
 	protected void verifyOrderedResult() throws Exception {
-		verifyResult(query, RESULTS_DIR.resolve(this.getClass().getSimpleName()).resolve(Thread.currentThread().getStackTrace()[2].getMethodName()).toFile(), true);
+		verifyResult(query, loadExpectedResult(), true);
 	}
 
 	protected void verifyUnorderedResult() throws Exception {
-		verifyResult(query, RESULTS_DIR.resolve(this.getClass().getSimpleName()).resolve(Thread.currentThread().getStackTrace()[2].getMethodName()).toFile(), false);
+		verifyResult(query, loadExpectedResult(), false);
+	}
+
+	private File loadExpectedResult() {
+		return RESULTS_DIR.resolve(this.getClass().getSimpleName())
+			.resolve(Thread.currentThread().getStackTrace()[3].getMethodName())
+			.toFile();
 	}
 
 	/**
@@ -183,11 +196,10 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 	protected void verifyResult(String query, File resultFile, boolean ordered) throws Exception {
 		try (RepositoryConnection conn = getRepository().getConnection()) {
 
-			QueryResult iter;
-
+			QueryResult<?> iter;
 			if (conn.prepareQuery(query) instanceof GraphQuery) {
 				iter = conn.prepareGraphQuery(query).evaluate();
-			} else {
+  		} else {
 				iter = conn.prepareTupleQuery(query).evaluate();
 			}
 
@@ -197,6 +209,7 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 				writeTo.getParentFile().mkdirs();
 				writeTo.createNewFile();
 			}
+
 			try (OutputStream os = new FileOutputStream(writeTo)) {
 				while (iter.hasNext()) {
 					String bs = iter.next().toString()
@@ -207,20 +220,24 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 				}
 			}
 
-			if (!isLearnMode()) {
-				List<String> exp = Files.readAllLines(resultFile.toPath(), StandardCharsets.UTF_8);
-				List<String> act = Files.readAllLines(actualFile.toPath(), StandardCharsets.UTF_8);
+			if (isLearnMode()) {
+				return;
+			}
 
-				if (!ordered) {
-					exp.sort(String::compareTo);
-					act.sort(String::compareTo);
-				}
+			List<String> exp = Files.readAllLines(resultFile.toPath(), StandardCharsets.UTF_8);
+			List<String> act = Files.readAllLines(actualFile.toPath(), StandardCharsets.UTF_8);
 
-				assertEquals("Number of results", exp.size(), act.size());
+			if (!ordered) {
+				exp.sort(String::compareTo);
+				act.sort(String::compareTo);
+			}
 
-				for (int i = 0; i < act.size(); i++) {
-					assertEquals("Result record is as expected", exp.get(i).replace("[null]", "").trim(), act.get(i).replace("[null]", "").trim());
-				}
+			assertEquals("The number of results differs", exp.size(), act.size());
+
+			for (int i = 0; i < act.size(); i++) {
+				String expected = exp.get(i).replace("[null]", "").trim();
+				String actual = act.get(i).replace("[null]", "").trim();
+				assertEquals("Result record isn't as expected", expected, actual);
 			}
 		}
 	}
@@ -235,7 +252,7 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 	 * @param inputFolder
 	 */
 	protected void loadFilesToMongo(File inputFolder) {
-		List<Document> batch = new LinkedList<Document>();
+		List<Document> batch = new LinkedList<>();
 
 		for (File file : inputFolder.listFiles()) {
 			if (file.isDirectory()) {
@@ -270,6 +287,7 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 		return false;
 	}
 
+	@SuppressWarnings("unchecked")
 	protected void addMongoDates() {
 		FindIterable<Document> documents = collection.find();
 
@@ -281,13 +299,13 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 					continue;
 				}
 
-				for (Map.Entry currentValue : graph.get(0).entrySet()) {
+				for (Entry<String, Object> currentValue : graph.get(0).entrySet()) {
 					Object object = graph.get(0).get(currentValue.getKey());
 
 					if (object instanceof Document) {
 						addMongoDates((Document) object, id, currentValue.getKey().toString());
 					} else if(object instanceof ArrayList) {
-						addMongoDates((ArrayList<Object>) object, id, currentValue.getKey().toString());
+						addMongoDates((List<Object>) object, id, currentValue.getKey().toString());
 					}
 				}
 			}
@@ -296,10 +314,11 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 		}
 	}
 
-	private void addMongoDates(ArrayList<Object> objects, ObjectId objectId, String prefix) throws ParseException {
+	@SuppressWarnings("unchecked")
+	private void addMongoDates(List<Object> objects, ObjectId objectId, String prefix) throws ParseException {
 		for (Object object : objects) {
 			if (object instanceof Document) {
-				for (Map.Entry currentValue : ((Document) object).entrySet()) {
+				for (Entry<String, Object> currentValue : ((Document) object).entrySet()) {
 					StringBuilder sb = new StringBuilder();
 					sb.append(prefix);
 					if (currentValue.getValue() instanceof Document) {
@@ -307,7 +326,7 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 						addMongoDates((Document) currentValue.getValue(), objectId, sb.toString());
 					} else if (currentValue.getValue() instanceof ArrayList) {
 						sb.append("[" + currentValue.getKey().toString());
-						addMongoDates((ArrayList<Object>) currentValue.getValue(), objectId, sb.toString());
+                        addMongoDates((List<Object>) currentValue.getValue(), objectId, sb.toString());
 					}
 				}
 			}
