@@ -45,8 +45,30 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 	public static final IRI ENTITY = SimpleValueFactory.getInstance().createIRI(NAMESPACE + "entity");
 	public static final IRI GRAPH = SimpleValueFactory.getInstance().createIRI(NAMESPACE + "graph");
 	public static final IRI COLLATION = SimpleValueFactory.getInstance().createIRI(NAMESPACE + "collation");
+	public static final IRI BATCH = SimpleValueFactory.getInstance().createIRI(NAMESPACE + "batchSize");
 
 	protected static final String MONGODB_PROPERTIES = "mongodb.properties";
+	
+	public final int MAX_BATCH_SIZE;
+
+	{
+		int maxBatch;
+		try {
+			maxBatch = Integer.parseInt(System.getProperty("graphdb.mongodb.maxBatchSize", "1000"));
+		} catch (NumberFormatException e) {
+			getLogger().error("Invalid graphdb.mongodb.maxBatchSize: {}", System.getProperty(
+							"graphdb.mongodb.maxBatchSize"));
+			maxBatch = 1000;
+		}
+		if (maxBatch > 10000) {
+			getLogger().warn("graphdb.mongodb.maxBatchSize size is too large. Max allowed is 10000");
+			maxBatch = 10000;
+		}
+		if (maxBatch == 0) {
+			getLogger().info("MongoDB batch loading is disabled");
+		}
+		MAX_BATCH_SIZE = maxBatch;
+	}
 
 	protected ValueFactory vf = SimpleValueFactory.getInstance();
 
@@ -61,6 +83,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 	long graphId = 0;
 	long rdf_type = 0;
 	long collationId = 0;
+	long batchSize = 0;
 
 	protected long[] predicateSet;
 
@@ -158,10 +181,11 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 		graphId = entities.put(GRAPH, Scope.SYSTEM);
 		rdf_type = entities.resolve(RDF.TYPE);
 		collationId = entities.put(COLLATION, Scope.SYSTEM);
+		batchSize = entities.put(BATCH, Scope.SYSTEM);
 
 
 		predicateSet = new long[] {serviceId, databaseId, collectionId, userId, passwordId, authDbId, dropId, queryId,
-				projectionId, aggregationId, hintId, entityId, graphId, collationId, rdf_type};
+				projectionId, aggregationId, hintId, entityId, graphId, collationId, batchSize, rdf_type};
 		Arrays.sort(predicateSet);
 	}
 
@@ -181,6 +205,9 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 		}
 		if (predicate == graphId) {
 			return 0.35;
+		}
+		if (predicate == batchSize) {
+			return 0.37;
 		}
 		if (predicate == aggregationId) {
 			return 0.39;
@@ -402,6 +429,20 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 			iter.setCollation(collationString);
 			return iter.singletonIterator(collationId, object);
 		}
+		if (predicate == batchSize) {
+			if (ctx.iters == null) {
+				getLogger().error("iter not created yet");
+				return StatementIterator.EMPTY;
+			}
+			Integer batchSizeCfg = readBatchSize(object, entities);
+			if (batchSizeCfg == null) {
+				return StatementIterator.EMPTY;
+			}
+
+			MongoResultIterator iter = getIterator(subject, context, ctx);
+			iter.setDocumentsLimit(batchSizeCfg);
+			return iter.singletonIterator(batchSize, object);
+		}
 		if (predicate == hintId) {
 			String hintString = Utils.getString(entities, object);
 
@@ -458,6 +499,26 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 			}
 		}
 		return null;
+	}
+
+	private Integer readBatchSize(long object, Entities entities) {
+		Integer batchSizeCfg = Utils.getInteger(entities, object);
+		if (batchSizeCfg == null || batchSizeCfg < 0) {
+			getLogger().error("Invalid batch size configuration: {}",
+							Utils.getString(entities, object));
+				return null;
+		}
+		if (batchSizeCfg >= MAX_BATCH_SIZE) {
+			if (MAX_BATCH_SIZE == 0) {
+				getLogger().warn("Batch document functionality is disabled. Ignoring {} configuration.",
+								BATCH);
+			} else {
+				getLogger().warn("Batch size {} exceeds maximum {}. Using default size.",
+								Utils.getString(entities, object), MAX_BATCH_SIZE);
+			}
+			batchSizeCfg = MAX_BATCH_SIZE;
+		}
+		return batchSizeCfg;
 	}
 
 	private Configuration resolveConfiguration(String suffix) {
@@ -917,6 +978,26 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 				getDelegate().setIndexId(indexId);
 			}
 			super.setIndexId(indexId);
+		}
+
+		@Override public void setDocumentsLimit(int documentsLimit) {
+			MongoResultIterator delegate = getDelegate();
+			if (delegate != null) {
+				getDelegate().setDocumentsLimit(documentsLimit);
+			}
+			super.setDocumentsLimit(documentsLimit);
+		}
+
+		@Override public int getDocumentsLimit() {
+			int limit = super.getDocumentsLimit();
+			if (limit != 0) {
+				return limit;
+			}
+			MongoResultIterator delegate = getDelegate();
+			if (delegate == null) {
+				return 0;
+			}
+			return delegate.getDocumentsLimit();
 		}
 
 		@Override public long getIndexId() {
