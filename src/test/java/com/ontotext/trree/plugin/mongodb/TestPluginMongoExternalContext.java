@@ -1,6 +1,16 @@
 package com.ontotext.trree.plugin.mongodb;
 
+import static org.junit.Assert.assertEquals;
+
 import com.ontotext.test.utils.StandardUtils;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.entity.BasicHttpEntity;
@@ -10,18 +20,8 @@ import org.apache.http.protocol.HttpRequestHandler;
 import org.eclipse.rdf4j.repository.config.RepositoryConfig;
 import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Test the plugin support with external JSON-LD contexts.
@@ -36,10 +36,6 @@ public class TestPluginMongoExternalContext extends AbstractMongoBasicTest {
   @Override
   protected void loadData() {
     loadFilesToMongo();
-  }
-
-  @Override protected boolean isLearnMode() {
-    return false;
   }
 
   @BeforeClass
@@ -70,65 +66,68 @@ public class TestPluginMongoExternalContext extends AbstractMongoBasicTest {
       httpResponse.addHeader(HttpHeaders.CONTENT_TYPE, "application/ld+json");
       httpResponse.setStatusCode(200);
       BasicHttpEntity entity = new BasicHttpEntity();
-      File contextFile = INPUT_DIR.resolve(
-              TestPluginMongoExternalContext.class.getSimpleName() + "/context/context.json")
-              .toFile();
-      byte[] contextBytes = FileUtils.readFileToByteArray(contextFile);
-      entity.setContent(new ByteArrayInputStream(contextBytes));
+      File contextFile = INPUT_DIR.resolve(getClassName() + "/context/context.json").toFile();
+      entity.setContent(new ByteArrayInputStream(FileUtils.readFileToByteArray(contextFile)));
       httpResponse.setEntity(entity);
     };
+  }
+
+  private static String getClassName() {
+    return TestPluginMongoExternalContext.class.getSimpleName();
   }
 
   public static HttpServer createTestServer(Map<String, HttpRequestHandler> handlers, int port) {
     Objects.requireNonNull(handlers, "The input map is required!");
     InetSocketAddress address = new InetSocketAddress("localhost", port);
-    ServerBootstrap bootstrap = ServerBootstrap.bootstrap()
-            .setLocalAddress(address.getAddress())
-            .setListenerPort(port);
+    ServerBootstrap bootstrap = ServerBootstrap.bootstrap().setLocalAddress(address.getAddress()).setListenerPort(port);
     handlers.forEach(bootstrap::registerHandler);
     return bootstrap.create();
   }
 
   /**
-   * We should test that the context cache works and is actually used
+   * We should test that the context cache works and is actually used.
    */
   @Test
   public void testExternalContextWithCaching() throws Exception {
+    query = """
+        PREFIX : <http://www.ontotext.com/connectors/mongodb#>
+        PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>
+        PREFIX bbc: <http://www.bbc.co.uk/ontologies/bbc/>
 
-    query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\n" +
-            "PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\n" +
-            "PREFIX bbc: <http://www.bbc.co.uk/ontologies/bbc/>\n" +
-            "select distinct ?s ?p ?o {\n"
-            + "\t?search a inst:spb100 ;\n"
-            + "\t:find \"{}\" ;"
-            + "\t:entity ?entity .\n"
-            + "\tgraph inst:spb100 {\n"
-            + "\t\t?s bbc:primaryContentOf ?o .\n"
-            + "\t}\n"
-            + "}";
+        SELECT DISTINCT ?s ?p ?o {
+          ?search a inst:spb100 ;
+                  :find "{}" ;
+                  :entity ?entity .
+          GRAPH inst:spb100 {
+            ?s bbc:primaryContentOf ?o .
+          }
+        }
+        """;
 
     verifyUnorderedResult();
-    Assert.assertEquals(1, hitCount.get());
+    assertEquals(1, hitCount.get());
   }
 
   /**
-   * We should test that the context cache works and is actually used
+   * We should test that the context cache works and is actually used.
    */
   @Test
   public void testResolveBaseFromExternalContext() throws Exception {
+    query = """
+        PREFIX : <http://www.ontotext.com/connectors/mongodb#>
+        PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>
+        PREFIX cwork: <http://www.bbc.co.uk/ontologies/creativework/>
 
-    query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\n" +
-            "PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\n" +
-            "PREFIX cwork: <http://www.bbc.co.uk/ontologies/creativework/>\n" +
-            "select distinct ?s ?category {\n"
-            + "\t?search a inst:spb100 ;\n"
-            + "\t:find \"{'@id' : 'things/1#id'}\" ;\n"
-            + "\t:entity ?entity .\n"
-            + "\tgraph inst:spb100 {\n"
-            + "\t\t?s a ?o .\n"
-            + "\t\t?s cwork:category ?category\n"
-            + "\t}\n"
-            + "}";
+        SELECT DISTINCT ?s ?category {
+          ?search a inst:spb100 ;
+                  :find "{'@id' : 'things/1#id'}" ;
+                  :entity ?entity .
+          GRAPH inst:spb100 {
+            ?s a ?o .
+            ?s cwork:category ?category .
+          }
+        }
+        """;
 
     verifyUnorderedResult();
   }
@@ -137,5 +136,4 @@ public class TestPluginMongoExternalContext extends AbstractMongoBasicTest {
   protected RepositoryConfig createRepositoryConfiguration() {
     return StandardUtils.createOwlimSe("empty");
   }
-
 }

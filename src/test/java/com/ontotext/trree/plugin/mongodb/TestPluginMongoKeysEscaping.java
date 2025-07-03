@@ -6,34 +6,35 @@ import org.junit.Test;
 
 public class TestPluginMongoKeysEscaping extends AbstractMongoBasicTest {
 
-	@Override
-	protected void loadData() {
-		loadFilesToMongo();
-	}
-	/**
-	 * Mongo does not support "." and "$" (as first char) in the keys of the documents. In the
-	 * JSON-LDs all keys should be decoded and the values should be returned as they are in the mongo document.
-	 */
-	@Test
-	public void testOnlyKeysAreDecoded() throws Exception {
+  @Override
+  protected void loadData() {
+    loadFilesToMongo();
+  }
 
-		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
-				"PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
-				"select ?s ?p ?o {\n"
-				+ "\t?search a inst:spb100 ;\n"
-				+ "\t:find \"{}\" ;"
-				+ "\t:entity ?entity .\n"
-				+ "\tgraph inst:spb100 {\n"
-				+ "\t\t?s ?p ?o .\n"
-				+ "\t}\n"
-				+ "}";
+  /**
+   * Mongo does not support "." and "$" (as first char) in the keys of the documents. In the JSON-LDs all keys should be
+   * decoded and the values should be returned as they are in the mongo document.
+   */
+  @Test
+  public void testOnlyKeysAreDecoded() throws Exception {
+    query = """
+        PREFIX : <http://www.ontotext.com/connectors/mongodb#>
+        PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>
 
-		verifyUnorderedResult();
-	}
+        SELECT ?s ?p ?o {
+          ?search a inst:spb100 ;
+                  :find "{}" ;
+                  :entity ?entity .
+          GRAPH inst:spb100 {
+            ?s ?p ?o .
+          }
+        }
+        """;
+    verifyUnorderedResult();
+  }
 
-	@Override
-	protected RepositoryConfig createRepositoryConfiguration() {
-		return StandardUtils.createOwlimSe("empty");
-	}
-
+  @Override
+  protected RepositoryConfig createRepositoryConfiguration() {
+    return StandardUtils.createOwlimSe("empty");
+  }
 }

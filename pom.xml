@@ -1,255 +1,267 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.ontotext.graphdb.plugins</groupId>
-	<artifactId>mongodb-plugin</artifactId>
-	<version>1.2-SNAPSHOT</version>
-	<name>MongoDB Plugin</name>
-	<description>MongoDB plugin for GraphDB</description>
+  <groupId>com.ontotext.graphdb.plugins</groupId>
+  <artifactId>mongodb-plugin</artifactId>
+  <version>1.2-SNAPSHOT</version>
+  <packaging>jar</packaging>
 
-	<properties>
-		<graphdb.version>11.0.0</graphdb.version>
-		<dependency.check.version>12.1.0</dependency.check.version>
+  <name>MongoDB Plugin</name>
+  <description>MongoDB plugin for GraphDB</description>
 
-		<java.level>21</java.level>
+  <properties>
+    <graphdb.version>11.0.0</graphdb.version>
+    <mongodb-driver-sync.version>3.8.1</mongodb-driver-sync.version>
 
-		<internal.repo>https://maven.ontotext.com/content/repositories/owlim-releases</internal.repo>
-		<snapshots.repo>https://maven.ontotext.com/content/repositories/owlim-snapshots</snapshots.repo>
+    <!-- Test -->
+    <junit.version>4.13.1</junit.version>
+    <flapdoodle-mongo.version>2.1.1</flapdoodle-mongo.version>
 
-		<!-- Empty defaults to keep things happy, argLine can be overridden on command line,
-            extraArgLine may be overridden by one of the profiles. -->
-		<argLine />
-		<extraArgLine />
-	</properties>
+    <!-- General -->
+    <java.version>21</java.version>
+    <encoding>UTF-8</encoding>
 
-	<packaging>jar</packaging>
+    <!-- Releases -->
+    <internal.repo>https://maven.ontotext.com/content/repositories/owlim-releases</internal.repo>
+    <snapshots.repo>https://maven.ontotext.com/content/repositories/owlim-snapshots</snapshots.repo>
 
-	<build>
+    <!-- Plugins -->
+    <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+    <maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
+    <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
+    <maven-assembly-plugin.version>3.1.1</maven-assembly-plugin.version>
+    <dependency-check-maven.version>12.1.0</dependency-check-maven.version>
+    <cvss.threshold>7</cvss.threshold>
 
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.1</version>
-				<configuration>
-					<source>${java.level}</source>
-					<target>${java.level}</target>
-					<encoding>UTF-8</encoding>
-				</configuration>
-			</plugin>
+    <!--
+      Empty defaults to keep things happy, argLine can be overridden on command line,
+      extraArgLine may be overridden by one of the profiles.
+    -->
+    <argLine />
+    <extraArgLine />
+  </properties>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.0.0-M3</version>
-				<configuration>
-					<argLine>${argLine} ${extraArgLine}</argLine>
-					<systemPropertyVariables>
-						<graphdb.stats.default>disabled</graphdb.stats.default>
-					</systemPropertyVariables>
-				</configuration>
-			</plugin>
+  <dependencies>
+    <dependency>
+      <groupId>org.mongodb</groupId>
+      <artifactId>mongodb-driver-sync</artifactId>
+      <version>${mongodb-driver-sync.version}</version>
+    </dependency>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-release-plugin</artifactId>
-				<version>2.5.3</version>
-				<configuration>
-					<tagNameFormat>@{project.version}</tagNameFormat>
-				</configuration>
-			</plugin>
+    <dependency>
+      <groupId>com.ontotext.graphdb</groupId>
+      <artifactId>graphdb-sdk</artifactId>
+      <version>${graphdb.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.eclipse.rdf4j</groupId>
+          <artifactId>rdf4j-rio-jsonld</artifactId>
+        </exclusion>
+      </exclusions>
+      <scope>provided</scope>
+    </dependency>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>3.1.1</version>
-				<configuration>
-					<finalName>${project.artifactId}</finalName>
-					<descriptors>
-						<descriptor>graphdb-plugin.xml</descriptor>
-					</descriptors>
-				</configuration>
-				<executions>
-					<execution>
-						<id>package-plugin</id>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+    <dependency>
+      <groupId>com.ontotext.graphdb</groupId>
+      <artifactId>graphdb-runtime</artifactId>
+      <version>${graphdb.version}</version>
+      <!-- Temporary workaround for missing Ontop dependencies for Ontotext build of Ontop -->
+      <exclusions>
+        <exclusion>
+          <groupId>it.unibz.inf.ontop</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+      <scope>provided</scope>
+    </dependency>
 
-			<plugin>
-				<groupId>org.owasp</groupId>
-				<artifactId>dependency-check-maven</artifactId>
-				<version>${dependency.check.version}</version>
-				<configuration>
-					<failBuildOnCVSS>7</failBuildOnCVSS>
-					<skipProvidedScope>true</skipProvidedScope>
-				</configuration>
-				<executions>
-					<execution>
-						<phase>none</phase>
-						<goals>
-							<goal>aggregate</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
+    <dependency>
+      <groupId>com.ontotext.graphdb</groupId>
+      <artifactId>graphdb-tests-base</artifactId>
+      <scope>test</scope>
+      <version>${graphdb.version}</version>
+      <!-- Temporary workaround for missing Ontop dependencies for Ontotext build of Ontop -->
+      <exclusions>
+        <exclusion>
+          <groupId>it.unibz.inf.ontop</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
 
-	<repositories>
-		<!-- Repository needed for GraphDB artifacts and some support artifacts -->
-		<repository>
-			<id>owlim-releases</id>
-			<name>GraphDB Releases</name>
-			<url>https://maven.ontotext.com/repository/owlim-releases</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
+    <!-- Test -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.mongodb</groupId>
-			<artifactId>mongodb-driver-sync</artifactId>
-			<version>3.8.1</version>
-		</dependency>
+    <dependency>
+      <groupId>de.flapdoodle.embed</groupId>
+      <artifactId>de.flapdoodle.embed.mongo</artifactId>
+      <version>${flapdoodle-mongo.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-compress</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
 
-		<dependency>
-			<groupId>com.ontotext.graphdb</groupId>
-			<artifactId>graphdb-sdk</artifactId>
-			<version>${graphdb.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.eclipse.rdf4j</groupId>
-					<artifactId>rdf4j-rio-jsonld</artifactId>
-				</exclusion>
-			</exclusions>
-			<scope>provided</scope>
-		</dependency>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven-compiler-plugin.version}</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+          <encoding>${encoding}</encoding>
+        </configuration>
+      </plugin>
 
-		<dependency>
-			<groupId>org.eclipse.collections</groupId>
-			<artifactId>eclipse-collections-api</artifactId>
-			<version>11.1.0</version>
-		</dependency>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${maven-surefire-plugin.version}</version>
+        <configuration>
+          <argLine>${argLine} ${extraArgLine}</argLine>
+          <systemPropertyVariables>
+            <graphdb.stats.default>disabled</graphdb.stats.default>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
 
-		<dependency>
-			<groupId>com.ontotext.graphdb</groupId>
-			<artifactId>graphdb-runtime</artifactId>
-			<version>${graphdb.version}</version>
-			<!-- Temporary workaround for missing Ontop dependencies for Ontotext build of Ontop -->
-			<exclusions>
-				<exclusion>
-					<groupId>it.unibz.inf.ontop</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-			<scope>provided</scope>
-		</dependency>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>${maven-release-plugin.version}</version>
+        <configuration>
+          <tagNameFormat>@{project.version}</tagNameFormat>
+        </configuration>
+      </plugin>
 
-		<dependency>
-			<groupId>com.ontotext.graphdb</groupId>
-			<artifactId>graphdb-tests-base</artifactId>
-			<scope>test</scope>
-			<version>${graphdb.version}</version>
-			<!-- Temporary workaround for missing Ontop dependencies for Ontotext build of Ontop -->
-			<exclusions>
-				<exclusion>
-					<groupId>it.unibz.inf.ontop</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>${maven-assembly-plugin.version}</version>
+        <configuration>
+          <finalName>${project.artifactId}</finalName>
+          <descriptors>
+            <descriptor>graphdb-plugin.xml</descriptor>
+          </descriptors>
+        </configuration>
+        <executions>
+          <execution>
+            <id>package-plugin</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
 
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.13.1</version>
-			<scope>test</scope>
-		</dependency>
+      <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+        <version>${dependency-check-maven.version}</version>
+        <configuration>
+          <failBuildOnCVSS>${cvss.threshold}</failBuildOnCVSS>
+          <skipProvidedScope>true</skipProvidedScope>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>none</phase>
+            <goals>
+              <goal>aggregate</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
-		<dependency>
-			<groupId>de.flapdoodle.embed</groupId>
-			<artifactId>de.flapdoodle.embed.mongo</artifactId>
-			<version>2.1.1</version>
-			<scope>test</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>org.apache.commons</groupId>
-					<artifactId>commons-compress</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-	</dependencies>
+  <repositories>
+    <!-- Repository needed for GraphDB artifacts and some support artifacts -->
+    <repository>
+      <id>owlim-releases</id>
+      <name>GraphDB Releases</name>
+      <url>https://maven.ontotext.com/repository/owlim-releases</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
 
-	<profiles>
-        <profile>
-            <!--
-                If test.java is set then we run the tests with a different Java distribution.
-                The property test.java must point to a Java home directory.
-                The test Java is assumed to be version 9+ so the appropriate arguments are added to surefire.
-             -->
-            <id>test-java</id>
-            <activation>
-                <property>
-                    <name>test.java</name>
-                </property>
-            </activation>
-            <properties>
-                <extraArgLine>--add-exports jdk.management.agent/jdk.internal.agent=ALL-UNNAMED</extraArgLine>
-            </properties>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-surefire-plugin</artifactId>
+  <profiles>
+    <profile>
+      <!--
+         If test.java is set then we run the tests with a different Java distribution.
+         The property test.java must point to a Java home directory.
+         The test Java is assumed to be version 9+ so the appropriate arguments are added to surefire.
+       -->
+      <id>test-java</id>
+      <activation>
+        <property>
+          <name>test.java</name>
+        </property>
+      </activation>
+      <properties>
+        <extraArgLine>--add-exports jdk.management.agent/jdk.internal.agent=ALL-UNNAMED</extraArgLine>
+      </properties>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-surefire-plugin</artifactId>
+              <configuration>
+                <jvm>${test.java}/bin/java</jvm>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
 
-                            <configuration>
-                                <jvm>${test.java}/bin/java</jvm>
-                            </configuration>
-                        </plugin>
+    <profile>
+      <!-- Adds Java 9+ -add-exports option to surefire if building on Java 9+ -->
+      <id>java9plus-build</id>
+      <activation>
+        <jdk>[9,)</jdk>
+      </activation>
+      <properties>
+        <extraArgLine>--add-exports jdk.management.agent/jdk.internal.agent=ALL-UNNAMED</extraArgLine>
+      </properties>
+    </profile>
+  </profiles>
 
-                    </plugins>
-                </pluginManagement>
-            </build>
-        </profile>
-        <profile>
-            <!-- Adds Java 9+ -add-exports option to surefire if building on Java 9+ -->
-            <id>java9plus-build</id>
-            <activation>
-                <jdk>[9,)</jdk>
-            </activation>
-            <properties>
-                <extraArgLine>--add-exports jdk.management.agent/jdk.internal.agent=ALL-UNNAMED</extraArgLine>
-            </properties>
-        </profile>
-	</profiles>
+  <distributionManagement>
+    <repository>
+      <id>internal</id>
+      <name>GraphDB Releases repository</name>
+      <url>${internal.repo}</url>
+    </repository>
+    <snapshotRepository>
+      <id>snapshots</id>
+      <name>GraphDB Snapshots repository</name>
+      <url>${snapshots.repo}</url>
+    </snapshotRepository>
+  </distributionManagement>
 
-	<distributionManagement>
-		<repository>
-			<id>internal</id>
-			<name>GraphDB Releases repository</name>
-			<url>${internal.repo}</url>
-		</repository>
-		<snapshotRepository>
-			<id>snapshots</id>
-			<name>GraphDB Snapshots repository</name>
-			<url>${snapshots.repo}</url>
-		</snapshotRepository>
-	</distributionManagement>
-
-	<scm>
-		<connection>scm:git:git@github.com:Ontotext-AD/graphdb-mongodb-plugin.git</connection>
-		<developerConnection>scm:git:git@github.com:Ontotext-AD/graphdb-mongodb-plugin.git</developerConnection>
-		<url>https://github.com/Ontotext-AD/graphdb-mongodb-plugin</url>
-		<tag>HEAD</tag>
-	</scm>
+  <scm>
+    <connection>scm:git:git@github.com:Ontotext-AD/graphdb-mongodb-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:Ontotext-AD/graphdb-mongodb-plugin.git</developerConnection>
+    <url>https://github.com/Ontotext-AD/graphdb-mongodb-plugin</url>
+    <tag>HEAD</tag>
+  </scm>
 
 </project>

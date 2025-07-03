@@ -28,12 +28,12 @@ directory. To install the plugin follow these steps:
 Currently the `master` branch is used for releases compatible with the latest versions of GraphDB. This means that the
 changes should be compatible with the GraphDB SDK, Java, RDF4J, etc.
 
-### Releases/GraphDB-10.8.x
+### Releases/GraphDB-10.8
 
-There is a protected branch called `releases/graphdb-10.8.x`, which is used for plugin releases that have to be
+There are protected branches prefixed `releases/graphdb-10.8-*`, which is used for plugin releases that have to be
 compatible with GraphDB 10.8.
 
-The branch is compatible with older version of the GraphDB SDK, Java 11 and RDF4J 4.
+These branches are compatible with older version of the GraphDB SDK, Java 11 and RDF4J 4.
 
-The need for such branch comes from the fact that we still support some of the older GraphDB versions and sometimes we
+The need for such branches comes from the fact that we still support some of the older GraphDB versions and sometimes we
 have to port a fix or functionality required by clients.

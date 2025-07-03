@@ -27,6 +27,8 @@ public class CachingDocumentLoader implements DocumentLoader, Closeable {
   // as the document instances are immutable we can cache them whole
   private final Map<URI, Document> documentCache = new LinkedHashMap<>() {
 
+    private static final long serialVersionUID = 1L;
+
     @Override
     protected boolean removeEldestEntry(Entry<URI, Document> eldest) {
       // if the cache reaches 1000 elements then the first (oldest) entity will be dropped from the cache

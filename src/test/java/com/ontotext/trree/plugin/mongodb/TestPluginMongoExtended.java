@@ -6,59 +6,75 @@ import org.junit.Test;
 
 public class TestPluginMongoExtended extends AbstractMongoBasicTest {
 
-	@Override
-	protected void loadData() {
-		loadFilesToMongo();
-	}
+  @Override
+  protected void loadData() {
+    loadFilesToMongo();
+  }
 
-	/**
-	 * We should test that the plugin handlers jsonlds with and without context. The ones with context have a "@graph"
-	 * node in the beginning
-	 */
-	@Test
-	public void testJsonLdWithAndWithoutContexts() {
-		String query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n"
-		        + "PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n"
-		        + "select distinct ?entity {\n"
-				+ "\t?search a inst:spb100 ;\n"
-				+ "\t:find \"{}\" ;\n"
-				+ "\t:entity ?entity .\n"
-				+ "\tgraph inst:spb100 {\n"
-				+ "\t\t?s ?p ?o .\n"
-				+ "\t}\n"
-				+ "}";
+  /**
+   * We should test that the plugin handlers jsonlds with and without context. The ones with context have a "@graph"
+   * node in the beginning.
+   */
+  @Test
+  public void testJsonLdWithAndWithoutContexts() {
+    String query = """
+          PREFIX : <http://www.ontotext.com/connectors/mongodb#>
+          PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>
 
-		verifyResultsCount(query, 2);
-	}
+          SELECT distinct ?entity {
+            ?search a inst:spb100 ;
+                    :find "{}" ;
+                    :entity ?entity .
+            GRAPH inst:spb100 {
+              ?s ?p ?o .
+            }
+          }
+        """;
 
-	/**
-	 * Custom fields can be added to the mongo doc as nodes in the "custom" node. They should be parsed separately
-	 * as they are not part of the json-ld standard.
-	 */
-	@Test
-	public void testCustomFields() throws Exception {
-		query = "PREFIX cwork: <http://www.bbc.co.uk/ontologies/creativework/>\n" +
-				"PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\n" +
-				"PREFIX : <http://www.ontotext.com/connectors/mongodb#>\n" +
-				"select ?p ?o{\n" +
-				"    ?search a inst:spb100 ;\n" +
-				"            :aggregate '''[\n" +
-				"{\"$match\": {\"@graph.@type\": \"cwork:NewsItem\"}}\n" +
-				"{\"$count\": \"size\"}, \n" +
-				"{\"$project\": {\"custom.size\": \"$size\", \"custom.halfSize\": {\"$divide\": [\"$size\", 2]}}}\n" +
-				"]''' ;\n" +
-				"     :entity ?entity .\n" +
-				"    graph inst:spb100 {\n" +
-				"        ?s ?p ?o .\n" +
-				"    }\n" +
-				"}";
+    verifyResultsCount(query, 2);
+  }
 
-		verifyUnorderedResult();
-	}
+  /**
+   * Custom fields can be added to the mongo doc as nodes in the "custom" node. They should be parsed separately as they
+   * are not part of the json-ld standard.
+   */
+  @Test
+  public void testCustomFields() throws Exception {
+    query = """
+          PREFIX cwork: <http://www.bbc.co.uk/ontologies/creativework/>
+          PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>
+          PREFIX : <http://www.ontotext.com/connectors/mongodb#>
 
-	@Override
-	protected RepositoryConfig createRepositoryConfiguration() {
-		return StandardUtils.createOwlimSe("empty");
-	}
-	
+          SELECT ?p ?o {
+            ?search a inst:spb100 ;
+                    :aggregate '''[
+                      {
+                        "$match": {
+                          "@graph.@type": "cwork:NewsItem"
+                        }
+                      },
+                      {
+                        "$count": "size"
+                      },
+                      {
+                        "$project": {
+                          "custom.size": "$size",
+                          "custom.halfSize": {
+                            "$divide": ["$size", 2]
+                          }
+                        }
+                      }]''' ;
+                    :entity ?entity .
+            GRAPH inst:spb100 {
+              ?s ?p ?o .
+            }
+          }
+        """;
+    verifyUnorderedResult();
+  }
+
+  @Override
+  protected RepositoryConfig createRepositoryConfiguration() {
+    return StandardUtils.createOwlimSe("empty");
+  }
 }
