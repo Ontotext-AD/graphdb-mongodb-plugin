@@ -9,10 +9,10 @@
 	<description>MongoDB plugin for GraphDB</description>
 
 	<properties>
-		<graphdb.version>11.0.0-RC3</graphdb.version>
+		<graphdb.version>11.0.0</graphdb.version>
 		<dependency.check.version>12.1.0</dependency.check.version>
 
-		<java.level>1.8</java.level>
+		<java.level>21</java.level>
 
 		<internal.repo>https://maven.ontotext.com/content/repositories/owlim-releases</internal.repo>
 		<snapshots.repo>https://maven.ontotext.com/content/repositories/owlim-snapshots</snapshots.repo>
@@ -131,6 +131,12 @@
 				</exclusion>
 			</exclusions>
 			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.eclipse.collections</groupId>
+			<artifactId>eclipse-collections-api</artifactId>
+			<version>11.1.0</version>
 		</dependency>
 
 		<dependency>
