@@ -4,10 +4,8 @@ import com.github.jsonldjava.core.DocumentLoader;
 import com.github.jsonldjava.core.JsonLdError;
 import com.github.jsonldjava.core.RemoteDocument;
 import com.github.jsonldjava.utils.JsonUtils;
-
 import java.io.Closeable;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
