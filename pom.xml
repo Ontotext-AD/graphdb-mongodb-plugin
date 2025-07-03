@@ -4,15 +4,15 @@
 
 	<groupId>com.ontotext.graphdb.plugins</groupId>
 	<artifactId>mongodb-plugin</artifactId>
-	<version>1.0.10</version>
+	<version>1.0-SNAPSHOT</version>
 	<name>MongoDB Plugin</name>
 	<description>MongoDB plugin for GraphDB</description>
 
 	<properties>
-		<graphdb.version>10.1.0</graphdb.version>
+		<graphdb.version>10.8.7</graphdb.version>
 		<dependency.check.version>6.2.2</dependency.check.version>
 
-		<java.level>1.8</java.level>
+		<java.level>11</java.level>
 
 		<internal.repo>https://maven.ontotext.com/content/repositories/owlim-releases</internal.repo>
 		<snapshots.repo>https://maven.ontotext.com/content/repositories/owlim-snapshots</snapshots.repo>
@@ -127,6 +127,12 @@
 			<scope>provided</scope>
 		</dependency>
 
+    <dependency>
+      <groupId>org.eclipse.collections</groupId>
+      <artifactId>eclipse-collections-api</artifactId>
+      <version>11.1.0</version>
+    </dependency>
+
 		<dependency>
 			<groupId>com.ontotext.graphdb</groupId>
 			<artifactId>graphdb-runtime</artifactId>
@@ -237,7 +243,7 @@
 		<connection>scm:git:git@github.com:Ontotext-AD/graphdb-mongodb-plugin.git</connection>
 		<developerConnection>scm:git:git@github.com:Ontotext-AD/graphdb-mongodb-plugin.git</developerConnection>
 		<url>https://github.com/Ontotext-AD/graphdb-mongodb-plugin</url>
-		<tag>1.0.10</tag>
+		<tag>HEAD</tag>
 	</scm>
 
 </project>

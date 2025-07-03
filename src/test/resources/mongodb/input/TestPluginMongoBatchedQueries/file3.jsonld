@@ -1,0 +1,27 @@
+{
+  "@context": {
+    "@base": "https://id.roche.com/am/a6/",
+    "@vocab": "https://id.roche.com/am/sc/at/",
+    "dct": "http://purl.org/dc/terms/",
+    "prov": "http://www.w3.org/ns/prov#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "type": "@type",
+    "_id": "@nest",
+    "relationship_entity": "dct:isPartOf",
+    "name": "skos:prefLabel",
+    "created_by": "dct:creator",
+    "coralreef_uri": {
+      "@type": "@id",
+      "@id": "prov:hadPrimarySource"
+    }
+  },
+  "name": "CSRUpdate_SDTMv_dp",
+  "type": "Activity",
+  "@id": "6568f1aecb2e4f12d9e3c7b4",
+  "relationship_entity": {
+    "@id": "6568f1aebd1e4f12a0c3d9a1",
+    "type": "Study",
+    "name": "YO42311"
+  },
+  "coralreef_uri": "https://id.roche.com/am/a3/ng4gskyq7qp7c9g4pg8s"
+}
