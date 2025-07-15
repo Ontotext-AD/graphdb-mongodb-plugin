@@ -48,27 +48,8 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 	public static final IRI BATCH = SimpleValueFactory.getInstance().createIRI(NAMESPACE + "batchSize");
 
 	protected static final String MONGODB_PROPERTIES = "mongodb.properties";
-	
-	public final int MAX_BATCH_SIZE;
 
-	{
-		int maxBatch;
-		try {
-			maxBatch = Integer.parseInt(System.getProperty("graphdb.mongodb.maxBatchSize", "1000"));
-		} catch (NumberFormatException e) {
-			getLogger().error("Invalid graphdb.mongodb.maxBatchSize: {}", System.getProperty(
-							"graphdb.mongodb.maxBatchSize"));
-			maxBatch = 1000;
-		}
-		if (maxBatch > 10000) {
-			getLogger().warn("graphdb.mongodb.maxBatchSize size is too large. Max allowed is 10000");
-			maxBatch = 10000;
-		}
-		if (maxBatch == 0) {
-			getLogger().info("MongoDB batch loading is disabled");
-		}
-		MAX_BATCH_SIZE = maxBatch;
-	}
+	private int maxBatchSize = 1000;
 
 	protected ValueFactory vf = SimpleValueFactory.getInstance();
 
@@ -163,6 +144,8 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 	 */
 	@Override
 	public void initialize(InitReason initReason, PluginConnection pluginConnection) {
+		maxBatchSize = readMaxBatchSizeConfig();
+
 		Entities entities = pluginConnection.getEntities();
 		// register the predicates
 		serviceId = entities.put(SERVICE, Scope.SYSTEM);
@@ -182,7 +165,6 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 		rdf_type = entities.resolve(RDF.TYPE);
 		collationId = entities.put(COLLATION, Scope.SYSTEM);
 		batchSize = entities.put(BATCH, Scope.SYSTEM);
-
 
 		predicateSet = new long[] {serviceId, databaseId, collectionId, userId, passwordId, authDbId, dropId, queryId,
 				projectionId, aggregationId, hintId, entityId, graphId, collationId, batchSize, rdf_type};
@@ -508,15 +490,15 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 							Utils.getString(entities, object));
 				return null;
 		}
-		if (batchSizeCfg >= MAX_BATCH_SIZE) {
-			if (MAX_BATCH_SIZE == 0) {
+		if (batchSizeCfg >= maxBatchSize) {
+			if (maxBatchSize == 0) {
 				getLogger().warn("Batch document functionality is disabled. Ignoring {} configuration.",
 								BATCH);
 			} else {
 				getLogger().warn("Batch size {} exceeds maximum {}. Using default size.",
-								Utils.getString(entities, object), MAX_BATCH_SIZE);
+								Utils.getString(entities, object), maxBatchSize);
 			}
-			batchSizeCfg = MAX_BATCH_SIZE;
+			batchSizeCfg = maxBatchSize;
 		}
 		return batchSizeCfg;
 	}
@@ -789,6 +771,28 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 
 	private void logUpdatedSetting(String suffix, String setting) {
 		getLogger().info("Setting {} for MongoDB service {}", setting, suffix);
+	}
+
+	private int readMaxBatchSizeConfig() {
+		int maxBatch;
+		try {
+			maxBatch = Integer.parseInt(System.getProperty("graphdb.mongodb.maxBatchSize", "1000"));
+		} catch (NumberFormatException e) {
+			getLogger().error("Invalid graphdb.mongodb.maxBatchSize: {}. Setting default 1000 as fallback.",
+					System.getProperty("graphdb.mongodb.maxBatchSize"));
+			maxBatch = 1000;
+		}
+
+		if (maxBatch > 10000) {
+			getLogger().warn("graphdb.mongodb.maxBatchSize size is too large. Max allowed is 10000");
+			maxBatch = 10000;
+		}
+
+		if (maxBatch == 0) {
+			getLogger().info("MongoDB batch loading is disabled");
+		}
+
+		return maxBatch;
 	}
 
 	/**
