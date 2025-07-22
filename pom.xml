@@ -12,6 +12,9 @@
 		<graphdb.version>10.8.7</graphdb.version>
 		<dependency.check.version>6.2.2</dependency.check.version>
 
+		<!-- There is an class loading issue when we use newer version with Java 11 -->
+		<eclipse-collections.version>10.4.0</eclipse-collections.version>
+
 		<java.level>11</java.level>
 
 		<internal.repo>https://maven.ontotext.com/content/repositories/owlim-releases</internal.repo>
@@ -130,8 +133,14 @@
     <dependency>
       <groupId>org.eclipse.collections</groupId>
       <artifactId>eclipse-collections-api</artifactId>
-      <version>11.1.0</version>
-    </dependency>
+			<version>${eclipse-collections.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.eclipse.collections</groupId>
+			<artifactId>eclipse-collections</artifactId>
+			<version>${eclipse-collections.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.ontotext.graphdb</groupId>
