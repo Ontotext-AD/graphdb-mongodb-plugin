@@ -2,7 +2,7 @@ package com.ontotext.trree.plugin.mongodb;
 
 import org.eclipse.collections.api.iterator.LongIterator;
 import org.eclipse.collections.api.set.primitive.MutableLongSet;
-import org.eclipse.collections.api.factory.primitive.LongSets;
+import org.eclipse.collections.impl.factory.primitive.LongSets;
 import org.eclipse.rdf4j.model.Model;
 import org.eclipse.rdf4j.model.impl.LinkedHashModel;
 
