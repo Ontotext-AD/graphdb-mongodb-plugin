@@ -1,6 +1,7 @@
 package com.ontotext.trree.plugin.mongodb;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
@@ -10,6 +11,7 @@ import com.ontotext.graphdb.Config;
 import com.ontotext.test.TemporaryLocalFolder;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -101,8 +103,14 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 	protected abstract void loadData();
 
 	@BeforeClass
-	public static void setWorkDir() {
+	public static void setWorkDir() throws IOException, ParseException {
 		System.setProperty("graphdb.home.work", String.valueOf(tmp.getRoot()));
+		Map<String, String> env = System.getenv();
+		// search for a license file in ~/.graphdb/conf/graphdb.license
+		System.setProperty(
+				"graphdb.home.conf",
+				System.getProperty("user.home") + File.separator + ".graphdb" + File.separator + "conf"
+		);
 		Config.reset();
 	}
 
@@ -218,9 +226,11 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 					os.write("\n".getBytes(StandardCharsets.UTF_8));
 					System.out.println(bs);
 				}
+				os.flush();
 			}
 
             if (isLearnMode()) {
+              fail("Disable the learn mode on the results");
               return;
             }
 
