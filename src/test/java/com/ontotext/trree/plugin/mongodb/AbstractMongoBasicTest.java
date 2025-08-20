@@ -1,15 +1,18 @@
 package com.ontotext.trree.plugin.mongodb;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.ontotext.graphdb.Config;
+import com.ontotext.license.LicenseCreator;
 import com.ontotext.test.TemporaryLocalFolder;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -101,8 +104,9 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 	protected abstract void loadData();
 
 	@BeforeClass
-	public static void setWorkDir() {
+	public static void setWorkDir() throws IOException, ParseException {
 		System.setProperty("graphdb.home.work", String.valueOf(tmp.getRoot()));
+		System.setProperty("graphdb.license.file", createLicenseFile().toString());
 		Config.reset();
 	}
 
@@ -129,6 +133,12 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 		mongo.close();
 
 		super.cleanup();
+	}
+
+	private static Path createLicenseFile() throws IOException, ParseException {
+		var licenseFile = tmp.getRoot().toPath().resolve("GRAPHDB_SE.license");
+		LicenseCreator.main(new String[]{"evaluation", "GRAPHDB_SE", "none", "2", licenseFile.getParent().toString()});
+		return licenseFile;
 	}
 
 	/**
@@ -218,9 +228,11 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 					os.write("\n".getBytes(StandardCharsets.UTF_8));
 					System.out.println(bs);
 				}
+				os.flush();
 			}
 
 			if (isLearnMode()) {
+				fail("Disable the learn mode on the results");
 				return;
 			}
 

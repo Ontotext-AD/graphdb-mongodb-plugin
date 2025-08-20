@@ -105,6 +105,138 @@ public class TestPluginMongoBatchedQueries extends AbstractMongoBasicTest {
   }
 
   @Test
+  public void testEntityLinkedVariable() throws Exception {
+    query = "PREFIX mongodb-index: <http://www.ontotext.com/connectors/mongodb/instance#>\n"
+            + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
+            + "PREFIX mongodb: <http://www.ontotext.com/connectors/mongodb#>\n"
+            + "PREFIX skos:  <http://www.w3.org/2004/02/skos/core#>\n"
+            + "PREFIX atlas: <https://id.roche.com/am/sc/at/>\n"
+            + "PREFIX prov: <http://www.w3.org/ns/prov#>\n"
+            + "PREFIX dct: <http://purl.org/dc/terms/>\n"
+            + "SELECT distinct * WHERE {\n"
+            + "    \n"
+            + "    {\n"
+            + "        [] a mongodb-index:spb100 ;\n"
+            + "        mongodb:batchSize \"1\" ;\n"
+            + "        mongodb:find '{}' ;\n"
+            + "        mongodb:entity [] .   \n"
+            + "\n"
+            + "        GRAPH mongodb-index:spb100 {\n"
+            + "            ?study prov:hadPrimarySource ?cr_study .\n"
+            + "        }\n"
+            + "" + "    }    \n"
+            + "}";
+
+    verifyUnorderedResult();
+  }
+
+  @Test
+  public void testEntityLinkedVariable2() throws Exception {
+    query = "PREFIX mongodb-index: <http://www.ontotext.com/connectors/mongodb/instance#>\n"
+            + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
+            + "PREFIX mongodb: <http://www.ontotext.com/connectors/mongodb#>\n"
+            + "PREFIX skos:  <http://www.w3.org/2004/02/skos/core#>\n"
+            + "PREFIX atlas: <https://id.roche.com/am/sc/at/>\n"
+            + "PREFIX prov: <http://www.w3.org/ns/prov#>\n"
+            + "PREFIX dct: <http://purl.org/dc/terms/>\n"
+            + "SELECT * WHERE {\n"
+            + "    \n"
+            + "    {\n"
+            + "        [] a mongodb-index:spb100 ;\n"
+            + "        mongodb:batchSize \"10\" ;\n"
+            + "        mongodb:find '{}' ;\n"
+            + "        mongodb:entity [] .   \n"
+            + "\n"
+            + "        GRAPH mongodb-index:spb100 {\n"
+            + "            ?study prov:hadPrimarySource ?cr_study .\n"
+            + "        }\n"
+            + "" + "    }    \n"
+            + "}";
+
+    verifyUnorderedResult();
+  }
+
+  @Test
+  public void testEntityLinkedVariable3() throws Exception {
+    query = "PREFIX mongodb-index: <http://www.ontotext.com/connectors/mongodb/instance#>\n"
+            + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
+            + "PREFIX mongodb: <http://www.ontotext.com/connectors/mongodb#>\n"
+            + "PREFIX skos:  <http://www.w3.org/2004/02/skos/core#>\n"
+            + "PREFIX atlas: <https://id.roche.com/am/sc/at/>\n"
+            + "PREFIX prov: <http://www.w3.org/ns/prov#>\n"
+            + "PREFIX dct: <http://purl.org/dc/terms/>\n"
+            + "SELECT * WHERE {\n"
+            + "    \n"
+            + "    {\n"
+            + "        [] a mongodb-index:spb100 ;\n"
+            + "        mongodb:batchSize \"10\" ;\n"
+            + "        mongodb:find '{}' ;\n"
+            + "        mongodb:entity ?test .   \n"
+            + "\n"
+            + "        GRAPH mongodb-index:spb100 {\n"
+            + "            ?study prov:hadPrimarySource ?cr_study .\n"
+            + "        }\n"
+            + "" + "    }    \n"
+            + "}";
+
+    verifyUnorderedResult();
+  }
+
+  @Test
+  public void testEntityLinkedVariable4() throws Exception {
+    query = "PREFIX mongodb-index: <http://www.ontotext.com/connectors/mongodb/instance#>\n"
+            + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
+            + "PREFIX mongodb: <http://www.ontotext.com/connectors/mongodb#>\n"
+            + "PREFIX skos:  <http://www.w3.org/2004/02/skos/core#>\n"
+            + "PREFIX atlas: <https://id.roche.com/am/sc/at/>\n"
+            + "PREFIX prov: <http://www.w3.org/ns/prov#>\n"
+            + "PREFIX dct: <http://purl.org/dc/terms/>\n"
+            + "SELECT * WHERE {\n"
+            + "    \n"
+            + "    {\n"
+            + "        [] a mongodb-index:spb100 ;\n"
+            + "        mongodb:batchSize \"10\" ;\n"
+            + "        mongodb:find '{}' ;\n"
+            + "        mongodb:entity ?test .   \n"
+            + "\n"
+            + "        GRAPH mongodb-index:spb100 {\n"
+            + "            ?test2 a ?type .\n"
+            + "            ?study prov:hadPrimarySource ?cr_study .\n"
+            + "        }\n"
+            + "" + "    }    \n"
+            + "}";
+
+    verifyUnorderedResult();
+  }
+
+  @Test
+  public void testEntityLinkedVariable5() throws Exception {
+    query = "PREFIX mongodb-index: <http://www.ontotext.com/connectors/mongodb/instance#>\n"
+            + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
+            + "PREFIX mongodb: <http://www.ontotext.com/connectors/mongodb#>\n"
+            + "PREFIX skos:  <http://www.w3.org/2004/02/skos/core#>\n"
+            + "PREFIX atlas: <https://id.roche.com/am/sc/at/>\n"
+            + "PREFIX prov: <http://www.w3.org/ns/prov#>\n"
+            + "PREFIX dct: <http://purl.org/dc/terms/>\n"
+            + "SELECT * WHERE {\n"
+            + "    \n"
+            + "    {\n"
+            + "        [] a mongodb-index:spb100 ;\n"
+            + "        mongodb:batchSize \"10\" ;\n"
+            + "        mongodb:find '{}' ;\n"
+            + "        mongodb:entity ?study .   \n"
+            + "\n"
+            + "        GRAPH mongodb-index:spb100 {\n"
+            + "            ?study a ?type .\n"
+            + "            ?study prov:hadPrimarySource ?cr_study .\n"
+            + "        }\n"
+            + "" + "    }    \n"
+            + "}";
+
+    verifyUnorderedResult();
+  }
+
+  @Test
   public void testClientExactCase() throws Exception {
     query = "PREFIX mongodb-index: <http://www.ontotext.com/connectors/mongodb/instance#>\n"
         + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
