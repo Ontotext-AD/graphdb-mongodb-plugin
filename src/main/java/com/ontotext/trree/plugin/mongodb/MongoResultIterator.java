@@ -186,7 +186,7 @@ public class MongoResultIterator extends StatementIterator {
 		Model[] data = new Model[1];
 		batchedLoading = true;
 		try {
-			while (hasSolution() && batchDocumentStore.size() <= getDocumentsLimit()) {
+			while (hasSolution() && batchDocumentStore.size() < getDocumentsLimit()) {
 				long docId = readNextDocument(current -> data[0] = current);
 				if (docId != 0) {
 					batchDocumentStore.addDocument(docId, data[0]);
@@ -291,10 +291,9 @@ public class MongoResultIterator extends StatementIterator {
 			Object item = doc.get(GRAPH);
 			Document graphDoc;
 			if (item != null) {
-				if (item instanceof List) {
-					List<?> listItem = (List<?>)item;
-					if (!listItem.isEmpty() && listItem.get(0) instanceof Document) {
-						graphDoc = (Document)listItem.get(0);
+				if (item instanceof List<?> listItem) {
+					if (!listItem.isEmpty() && listItem.getFirst() instanceof Document document) {
+						graphDoc = document;
 						entity = graphDoc.getString(ID);
 						if (listItem.size() > 1) {
 							plugin.getLogger().warn("Multiple graphs in mongo document. Selecting the first one for entity:	" + entity);
@@ -302,8 +301,8 @@ public class MongoResultIterator extends StatementIterator {
 					} else {
 						plugin.getLogger().warn("Value of @graph must be a valid document in mongo document.");
 					}
-				} else if (item instanceof Document) {
-					graphDoc = (Document)item;
+				} else if (item instanceof Document document) {
+					graphDoc = document;
 					entity = graphDoc.getString(ID);
 				} else {
 					plugin.getLogger().warn("@graph must be a document or list of documents in mongo document.");
@@ -379,8 +378,8 @@ public class MongoResultIterator extends StatementIterator {
 				id = entities.put(v, Scope.REQUEST);
 			}
 			Object customNode = doc.get(CUSTOM_NODE);
-			if (customNode instanceof Document) {
-				for (Map.Entry<String, Object> val : ((Document) customNode).entrySet()) {
+			if (customNode instanceof Document document) {
+				for (Map.Entry<String, Object> val : document.entrySet()) {
 					currentRDF.add(v, plugin.vf.createIRI(MongoDBPlugin.NAMESPACE_INST, val.getKey()), plugin.vf.createLiteral(val.getValue().toString()));
 				}
 			}
@@ -398,9 +397,8 @@ public class MongoResultIterator extends StatementIterator {
 	}
 
 	private String resolveDocumentBase(Object context, boolean allowRemoteContext) {
-		if (context instanceof Map) {
-			Map<String, Object> contexts = (Map<String, Object>) context;
-			return Objects.toString(contexts.get(BASE), null);
+		if (context instanceof Map<?, ?> contextMap) {
+			return Objects.toString(contextMap.get(BASE), null);
 		} else if (context instanceof String) {
 			if (!allowRemoteContext) {
 				plugin.getLogger().error("Attempted to load the remote context '{}' from a remote context", context);
@@ -418,10 +416,10 @@ public class MongoResultIterator extends StatementIterator {
 						.loadDocument(URI.create(context.toString()), new DocumentLoaderOptions()))
 						.getJsonContent()
 						.orElse(null);
-				if (jsonStructure instanceof Map) {
+				if (jsonStructure instanceof Map<?, ?> jsonMap) {
 					// When parsing JSON-LD documents using hasmac's library, string values are
 					// wrapped inside 'JsonString' objects, which include extra surrounding double quotes
-					Object contextValue = removeExtraQuotes(((Map<String, Object>) jsonStructure).get(CONTEXT));
+					Object contextValue = removeExtraQuotes(jsonMap.get(CONTEXT));
 					// do not allow loading a remote context from a remote context
 					// as this could be malicious
 					return resolveDocumentBase(contextValue, false);
@@ -467,6 +465,7 @@ public class MongoResultIterator extends StatementIterator {
 		return !interrupted && iter != null && iter.hasNext();
 	}
 
+	@SuppressWarnings("unchecked")
 	private Object removeExtraQuotes(Object value) {
 		if (value instanceof JsonString) {
 			// remove surrounding double quotes
@@ -478,7 +477,7 @@ public class MongoResultIterator extends StatementIterator {
 		} else if (value instanceof List) {
 			List<Object> list = (List<Object>) value;
 			return list.stream()
-					.map(v -> removeExtraQuotes(v))
+					.map(this::removeExtraQuotes)
 					.collect(Collectors.toList());
 		}
 		return value;
@@ -486,9 +485,28 @@ public class MongoResultIterator extends StatementIterator {
 
 	public StatementIterator getModelIterator(final long subject, final long predicate, final long object) {
 		setModelIteratorCreated(true);
-		Resource s = subject == 0 ? null : (Resource) entities.get(subject);
+		Resource sub = subject == 0 ? null : (Resource) entities.get(subject);
 		IRI p = predicate == 0 ? null : (IRI) entities.get(predicate);
 		Value o = object == 0 ? null : entities.get(object);
+		if (sub == null && batched) {
+			// for batched requests we provide a subject for the current entity
+			// but if that entity is already resolved as an object we should not do anything.
+			// The last condition is for inverse relations
+			// this section here will have nothing if the main entity iterator is not initialized
+			// this is the reason this is duplicated bellow in the model iterator
+			// this mainly covers the case
+			//    :entity [] .
+			// graph <> {?entity a ?type}.
+			// if this is written as
+			//    :entity ?entity .
+			// graph <> {?entity a ?type}.
+			// everything will work as expected
+			sub = (Resource) entities.get(this.object);
+			if (sub != null && sub.equals(o)) {
+				sub = null;
+			}
+		}
+		Resource s = sub;
 		return new StatementIterator() {
 			Iterator<Statement> local = null;
 
@@ -515,8 +533,17 @@ public class MongoResultIterator extends StatementIterator {
 						}
 					}
 				}
-				if (local == null)
-					local = currentRDF.filter(s, p, o).iterator();
+				if (local == null) {
+					// see the comment above
+					Resource localSub = s;
+					if (localSub == null && batched) {
+						localSub = (Resource) entities.get(MongoResultIterator.this.object);
+						if (localSub != null && localSub.equals(o)) {
+							localSub = null;
+						}
+					}
+					local = currentRDF.filter(localSub, p, o).iterator();
+				}
 				boolean has = local.hasNext();
 //				if (!has && hasSolution()) {
 //					advance();
