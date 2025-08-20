@@ -8,7 +8,6 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.ontotext.graphdb.Config;
-import com.ontotext.license.LicenseCreator;
 import com.ontotext.test.TemporaryLocalFolder;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -106,7 +105,12 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 	@BeforeClass
 	public static void setWorkDir() throws IOException, ParseException {
 		System.setProperty("graphdb.home.work", String.valueOf(tmp.getRoot()));
-		System.setProperty("graphdb.license.file", createLicenseFile().toString());
+		Map<String, String> env = System.getenv();
+		// search for a license file in ~/.graphdb/conf/graphdb.license
+		System.setProperty(
+				"graphdb.home.conf",
+				System.getProperty("user.home") + File.separator + ".graphdb" + File.separator + "conf"
+		);
 		Config.reset();
 	}
 
@@ -133,12 +137,6 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 		mongo.close();
 
 		super.cleanup();
-	}
-
-	private static Path createLicenseFile() throws IOException, ParseException {
-		var licenseFile = tmp.getRoot().toPath().resolve("GRAPHDB_SE.license");
-		LicenseCreator.main(new String[]{"evaluation", "GRAPHDB_SE", "none", "2", licenseFile.getParent().toString()});
-		return licenseFile;
 	}
 
 	/**
