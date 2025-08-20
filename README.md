@@ -12,6 +12,10 @@ The built plugin can be found in the `target` directory:
 
 - `mongodb-plugin-graphdb-plugin.zip`
 
+Note: The plugin tests require a GraphD 11 license in order to be run.
+The license is expected to be placed in  `${user.home}/.graphdb/conf/graphdb.license`.
+You can request a free license at: https://www.ontotext.com/products/graphdb/#try-graphdb
+
 ## Installing the plugin
 
 External plugins are installed under `lib/plugins` in the GraphDB distribution

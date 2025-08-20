@@ -13,7 +13,7 @@
 		<dependency.check.version>6.2.2</dependency.check.version>
 
 		<!-- There is an class loading issue when we use newer version with Java 11 -->
-		<eclipse-collections.version>10.4.0</eclipse-collections.version>
+		<eclipse-collections.version>11.1.0</eclipse-collections.version>
 
 		<java.level>11</java.level>
 

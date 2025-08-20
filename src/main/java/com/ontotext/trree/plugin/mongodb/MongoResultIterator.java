@@ -4,11 +4,15 @@ import static com.github.jsonldjava.core.JsonLdConsts.BASE;
 import static com.github.jsonldjava.core.JsonLdConsts.CONTEXT;
 import static com.github.jsonldjava.core.JsonLdConsts.GRAPH;
 import static com.github.jsonldjava.core.JsonLdConsts.ID;
-
 import com.github.jsonldjava.core.JsonLdError;
 import com.github.jsonldjava.core.RemoteDocument;
 import com.mongodb.MongoSecurityException;
-import com.mongodb.client.*;
+import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Collation;
 import com.mongodb.client.model.CollationAlternate;
 import com.mongodb.client.model.CollationCaseFirst;
@@ -18,22 +22,6 @@ import com.ontotext.trree.sdk.Entities;
 import com.ontotext.trree.sdk.Entities.Scope;
 import com.ontotext.trree.sdk.PluginException;
 import com.ontotext.trree.sdk.StatementIterator;
-import org.apache.commons.io.IOUtils;
-import org.bson.Document;
-import org.bson.codecs.DocumentCodec;
-import org.bson.json.JsonMode;
-import org.bson.json.JsonWriterSettings;
-import org.eclipse.collections.api.iterator.LongIterator;
-import org.eclipse.rdf4j.model.*;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.rio.ParserConfig;
-import org.eclipse.rdf4j.rio.RDFFormat;
-import org.eclipse.rdf4j.rio.RDFParseException;
-import org.eclipse.rdf4j.rio.Rio;
-import org.eclipse.rdf4j.rio.UnsupportedRDFormatException;
-import org.eclipse.rdf4j.rio.helpers.JSONLDSettings;
-import org.eclipse.rdf4j.rio.helpers.ParseErrorLogger;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.StringReader;
@@ -44,6 +32,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import org.apache.commons.io.IOUtils;
+import org.bson.Document;
+import org.bson.codecs.DocumentCodec;
+import org.bson.json.JsonMode;
+import org.bson.json.JsonWriterSettings;
+import org.eclipse.collections.api.iterator.LongIterator;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Model;
+import org.eclipse.rdf4j.model.Resource;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.rio.ParserConfig;
+import org.eclipse.rdf4j.rio.RDFFormat;
+import org.eclipse.rdf4j.rio.RDFParseException;
+import org.eclipse.rdf4j.rio.Rio;
+import org.eclipse.rdf4j.rio.UnsupportedRDFormatException;
+import org.eclipse.rdf4j.rio.helpers.JSONLDSettings;
+import org.eclipse.rdf4j.rio.helpers.ParseErrorLogger;
 
 public class MongoResultIterator extends StatementIterator {
 
@@ -185,7 +192,7 @@ public class MongoResultIterator extends StatementIterator {
 		Model[] data = new Model[1];
 		batchedLoading = true;
 		try {
-			while (hasSolution() && batchDocumentStore.size() <= getDocumentsLimit()) {
+			while (hasSolution() && batchDocumentStore.size() < getDocumentsLimit()) {
 				long docId = readNextDocument(current -> data[0] = current);
 				if (docId != 0) {
 					batchDocumentStore.addDocument(docId, data[0]);
@@ -284,16 +291,16 @@ public class MongoResultIterator extends StatementIterator {
 		if (interrupted) {
 			return 0;
 		}
-		
+
 		String entity = null;
 		if (doc.containsKey(GRAPH)) {
 			Object item = doc.get(GRAPH);
 			Document graphDoc;
 			if (item != null) {
 				if (item instanceof List) {
-					List<?> listItem = (List<?>)item;
+					List<?> listItem = (List<?>) item;
 					if (!listItem.isEmpty() && listItem.get(0) instanceof Document) {
-						graphDoc = (Document)listItem.get(0);
+						graphDoc = (Document) listItem.get(0);
 						entity = graphDoc.getString(ID);
 						if (listItem.size() > 1) {
 							plugin.getLogger().warn("Multiple graphs in mongo document. Selecting the first one for entity:	" + entity);
@@ -302,7 +309,7 @@ public class MongoResultIterator extends StatementIterator {
 						plugin.getLogger().warn("Value of @graph must be a valid document in mongo document.");
 					}
 				} else if (item instanceof Document) {
-					graphDoc = (Document)item;
+					graphDoc = (Document) item;
 					entity = graphDoc.getString(ID);
 				} else {
 					plugin.getLogger().warn("@graph must be a document or list of documents in mongo document.");
@@ -398,8 +405,7 @@ public class MongoResultIterator extends StatementIterator {
 
 	private String resolveDocumentBase(Object context, boolean allowRemoteContext) {
 		if (context instanceof Map) {
-			Map<String, Object> contexts = (Map<String, Object>) context;
-			return Objects.toString(contexts.get(BASE), null);
+			return Objects.toString(((Map<?,?>) context).get(BASE), null);
 		} else if (context instanceof String) {
 			if (!allowRemoteContext) {
 				plugin.getLogger().error("Attempted to load the remote context '{}' from a remote context", context);
@@ -464,9 +470,28 @@ public class MongoResultIterator extends StatementIterator {
 
 	public StatementIterator getModelIterator(final long subject, final long predicate, final long object) {
 		setModelIteratorCreated(true);
-		Resource s = subject == 0 ? null : (Resource) entities.get(subject);
+		Resource sub = subject == 0 ? null : (Resource) entities.get(subject);
 		IRI p = predicate == 0 ? null : (IRI) entities.get(predicate);
 		Value o = object == 0 ? null : entities.get(object);
+		if (sub == null && batched) {
+			// for batched requests we provide a subject for the current entity
+			// but if that entity is already resolved as an object we should not do anything.
+			// The last condition is for inverse relations
+			// this section here will have nothing if the main entity iterator is not initialized
+			// this is the reason this is duplicated bellow in the model iterator
+			// this mainly covers the case
+			//    :entity [] .
+			// graph <> {?entity a ?type}.
+			// if this is written as
+			//    :entity ?entity .
+			// graph <> {?entity a ?type}.
+			// everything will work as expected
+			sub = (Resource) entities.get(this.object);
+			if (sub != null && sub.equals(o)) {
+				sub = null;
+			}
+		}
+		Resource s = sub;
 		return new StatementIterator() {
 			Iterator<Statement> local = null;
 
@@ -493,8 +518,17 @@ public class MongoResultIterator extends StatementIterator {
 						}
 					}
 				}
-				if (local == null)
-					local = currentRDF.filter(s, p, o).iterator();
+				if (local == null) {
+					// see the comment above
+					Resource localSub = s;
+					if (localSub == null && batched) {
+						localSub = (Resource) entities.get(MongoResultIterator.this.object);
+						if (localSub != null && localSub.equals(o)) {
+							localSub = null;
+						}
+					}
+					local = currentRDF.filter(localSub, p, o).iterator();
+				}
 				boolean has = local.hasNext();
 //				if (!has && hasSolution()) {
 //					advance();
