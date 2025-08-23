@@ -179,7 +179,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 		if (predicate == rdf_type) {
 			if (ctx != null && ctx.iters != null && object != 0 && object != Entities.BOUND) {
 				String suffix = Utils.matchPrefix(
-								pluginConnection.getEntities().get(object).stringValue(), NAMESPACE_INST);
+								pluginConnection.getEntities().get(object).stringValue(), NAMESPACE_INST, NAMESPACE);
 				if (suffix != null && suffix.length() > 0) {
 					return 0.3;
 				}
@@ -252,7 +252,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 		if (predicate == rdf_type && context == 0) {
 			if (object >= 0)
 				return null;
-			String suffix = Utils.matchPrefix(Utils.getString(entities, object), NAMESPACE_INST);
+			String suffix = Utils.matchPrefix(Utils.getString(entities, object), NAMESPACE_INST, NAMESPACE);
 			if (suffix == null)
 				return null;
 			if (ctx.iters != null) {
@@ -444,7 +444,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 
 		if (context != 0) {
 			MongoResultIterator iterator;
-			String suffix = Utils.matchPrefix(entities.get(context).stringValue(), NAMESPACE_INST);
+			String suffix = Utils.matchPrefix(entities.get(context).stringValue(), NAMESPACE, NAMESPACE_INST);
 			if (suffix != null && suffix.length() > 0) {
 				if (ctx.iters == null) {
 					// no iterators up until this moment so we probably have model pattern before the actual query definition
@@ -545,7 +545,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 				|| predicate == passwordId || predicate == authDbId) {
 			// no valid object or subject
 			// get new instance localname
-			String suffix = Utils.matchPrefix(Utils.getString(pluginConnection.getEntities(), subject), NAMESPACE_INST);
+			String suffix = Utils.matchPrefix(Utils.getString(pluginConnection.getEntities(), subject), NAMESPACE_INST, NAMESPACE);
 			if (suffix == null) {
 				getLogger().error("No valid localname for the instance when registering a connection to MongoDB");
 				return true;
@@ -584,7 +584,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 			return true;
 		}
 		if (predicate == dropId) {
-			String suffix = Utils.matchPrefix(Utils.getString(pluginConnection.getEntities(), subject), NAMESPACE_INST);
+			String suffix = Utils.matchPrefix(Utils.getString(pluginConnection.getEntities(), subject), NAMESPACE_INST, NAMESPACE);
 			if (suffix == null) {
 				getLogger().error("No valid localname for the instance when registering a connection to MongoDB");
 				return true;
@@ -657,7 +657,7 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 	}
 
 	protected MongoResultIterator createMainIterator(long graphId, Entities entities, ContextImpl ctx) {
-		String suffix = Utils.matchPrefix(entities.get(graphId).stringValue(), NAMESPACE_INST);
+		String suffix = Utils.matchPrefix(entities.get(graphId).stringValue(), NAMESPACE_INST, NAMESPACE);
 		if (StringUtils.isBlank(suffix)) {
 			getLogger().error("Invalid MongoDB inst {}!", suffix);
 			return null;
@@ -929,7 +929,10 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 
 		@Override public StatementIterator createEntityIter(long pred) {
 			// we should have actual iterator instance when entity iterator is requested
-			return getDelegate().createEntityIter(pred);
+			MongoResultIterator iterator = getDelegate();
+			if (iterator == null)
+				return StatementIterator.EMPTY;
+			return iterator.createEntityIter(pred);
 		}
 
 		@Override public void setQuery(String query) {
