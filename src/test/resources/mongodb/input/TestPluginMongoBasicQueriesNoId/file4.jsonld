@@ -1,0 +1,144 @@
+{
+  "@graph": [
+    {
+      "id": "http://www.bbc.co.uk/things/1646457#id",
+      "@type": "cwork:Programme",
+      "bbc:primaryContentOf": [
+        {
+          "@id": "bbcd:269770#id",
+          "bbcwebDocumentType": {
+            "@id": "bbc:Mobile"
+          }
+        },
+        {
+          "@id": "bbcd:269771#id",
+          "bbcwebDocumentType": {
+            "@id": "bbc:HighWeb"
+          }
+        }
+      ],
+      "cwork:about": [
+        {
+          "@id": "dbpedia:Brasserie_du_Bocq"
+        },
+        {
+          "@id": "dbpedia:Elijah_ben_Joseph_Chabillo"
+        },
+        {
+          "@id": "dbpedia:Chauncey_Ives"
+        },
+        {
+          "@id": "dbpedia:Danny_Kelly_(footballer_born_1990)"
+        },
+        {
+          "@id": "dbpedia:Thomas_Allier"
+        },
+        {
+          "@id": "dbpedia:Michel_Raison"
+        },
+        {
+          "@id": "dbpedia:David_Gaiman"
+        },
+        {
+          "@id": "dbpedia:Pierre_Curie"
+        },
+        {
+          "@id": "dbpedia:Jeremy_Hall_(businessman)"
+        },
+        {
+          "@id": "dbpedia:New_York_Republican_primary,_2008"
+        },
+        {
+          "@id": "dbpedia:Genaro_Fessia"
+        },
+        {
+          "@id": "dbpedia:Diane_Renay"
+        },
+        {
+          "@id": "dbpedia:Bengt-Åke_Lundvall"
+        },
+        {
+          "@id": "dbpedia:Larry_Miller_(athlete)"
+        },
+        {
+          "@id": "dbpedia:Chizuru_Ikewaki"
+        },
+        {
+          "@id": "dbpedia:Richard_Suart"
+        }
+      ],
+      "cwork:altText": "thumbnail atlText for CW http://www.bbc.co.uk/context/1646457#id",
+      "cwork:audience": {
+        "@id": "cwork:InternationalAudience"
+      },
+      "cwork:category": {
+        "@id": "http://www.bbc.co.uk/category/Company"
+      },
+      "cwork:dateCreated": {
+        "@type": "xsd:dateTime",
+        "@value": "2011-08-20T09:04:08.251+03:00"
+      },
+      "cwork:dateModified": {
+        "@type": "xsd:dateTime",
+        "@value": "2011-09-05T18:57:19.911+03:00"
+      },
+      "cwork:description": " equine dredge unbearable unscathed fulfilled cramped unmistakable corm dollop lagoons rattlesnakes cantons maintain propellent chasms mantes pinwheeling reconnoiters becoming stiffer debited reappraise uvulars.",
+      "cwork:liveCoverage": {
+        "@type": "xsd:boolean",
+        "@value": "true"
+      },
+      "cwork:mentions": {
+        "@id": "geonames:6544528/"
+      },
+      "cwork:primaryFormat": {
+        "@id": "cwork:VideoFormat"
+      },
+      "cwork:shortTitle": " outrigger polonium faceless subjoin sabotaged dishonorable predates foxtrotting algorithms sapient.",
+      "cwork:thumbnail": {
+        "@id": "bbct:1064465301"
+      },
+      "cwork:title": "Apollo Records (1944) offence sexing mortgager's disambiguation undertaking femora niche kinking aggression comer."
+    }
+  ],
+  "id": "bbcc:1646457#id",
+  "@context": {
+    "id" : "@id",
+    "bbcevent": "http://www.bbc.co.uk/ontologies/event/",
+    "bbcwebDocumentType": "http://www.bbc.co.uk/ontologies/bbc/webDocumentType",
+    "geo-pos": "http://www.w3.org/2003/01/geo/wgs84_pos#",
+    "bbc": "http://www.bbc.co.uk/ontologies/bbc/",
+    "time": "http://www.w3.org/2006/time#",
+    "event": "http://purl.org/NET/c4dm/event.owl#",
+    "music-ont": "http://purl.org/ontology/mo/",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "provenance": "http://www.bbc.co.uk/ontologies/provenance/",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "cms": "http://www.bbc.co.uk/ontologies/cms/",
+    "news": "http://www.bbc.co.uk/ontologies/news/",
+    "cnews": "http://www.bbc.co.uk/ontologies/news/cnews/",
+    "cconcepts": "http://www.bbc.co.uk/ontologies/coreconcepts/",
+    "dbp-prop": "http://dbpedia.org/property/",
+    "geonames": "http://sws.geonames.org/",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "domain": "http://www.bbc.co.uk/ontologies/domain/",
+    "dbpedia": "http://dbpedia.org/resource/",
+    "geo-ont": "http://www.geonames.org/ontology#",
+    "bbc-pont": "http://purl.org/ontology/po/",
+    "tagging": "http://www.bbc.co.uk/ontologies/tagging/",
+    "sport": "http://www.bbc.co.uk/ontologies/sport/",
+    "skosCore": "http://www.w3.org/2004/02/skos/core#",
+    "dbp-ont": "http://dbpedia.org/ontology/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "core": "http://www.bbc.co.uk/ontologies/coreconcepts/",
+    "curric": "http://www.bbc.co.uk/ontologies/curriculum/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "cwork": "http://www.bbc.co.uk/ontologies/creativework/",
+    "fb": "http://rdf.freebase.com/ns/",
+    "ot": "http://www.ontotext.com/",
+    "ldbcspb": "http://www.ldbcouncil.org/spb#",
+    "bbcd": "http://www.bbc.co.uk/document/",
+    "bbcc": "http://www.bbc.co.uk/context/",
+    "bbct": "http://www.bbc.co.uk/thumbnail/"
+  }
+}

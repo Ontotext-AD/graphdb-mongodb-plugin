@@ -1,0 +1,128 @@
+{
+  "@graph": [
+    {
+      "id": "http://www.bbc.co.uk/things/1646446#id",
+      "@type": "cwork:BlogPost",
+      "bbc:primaryContentOf": [
+        {
+          "@id": "bbcd:269665#id",
+          "bbcwebDocumentType": {
+            "@id": "bbc:HighWeb"
+          }
+        },
+        {
+          "@id": "bbcd:269666#id",
+          "bbcwebDocumentType": {
+            "@id": "bbc:HighWeb"
+          }
+        },
+        {
+          "@id": "bbcd:269667#id",
+          "bbcwebDocumentType": {
+            "@id": "bbc:HighWeb"
+          }
+        }
+      ],
+      "cwork:about": [
+        {
+          "@id": "dbpedia:Brasserie_du_Bocq"
+        },
+        {
+          "@id": "dbpedia:Bezmiâlem"
+        },
+        {
+          "@id": "dbpedia:Jaime_Quesada_Chavarría"
+        },
+        {
+          "@id": "dbpedia:Charles_Fleming_(ornithologist)"
+        },
+        {
+          "@id": "dbpedia:Gianluigi_Roveta"
+        },
+        {
+          "@id": "dbpedia:Floyd_West"
+        },
+        {
+          "@id": "dbpedia:Martin_Karplus"
+        }
+      ],
+      "cwork:altText": "thumbnail atlText for CW http://www.bbc.co.uk/context/1646446#id",
+      "cwork:audience": {
+        "@id": "cwork:InternationalAudience"
+      },
+      "cwork:category": {
+        "@id": "http://www.bbc.co.uk/category/Company"
+      },
+      "cwork:dateCreated": {
+        "@type": "xsd:dateTime",
+        "@value": "2011-08-19T01:45:41.557+03:00"
+      },
+      "cwork:dateModified": {
+        "@type": "xsd:dateTime",
+        "@value": "2012-03-10T17:18:18.705+02:00"
+      },
+      "cwork:description": " steadfastness sunspot cancellation genuses trays impersonates calamities flyovers teasels repugnant identifying.",
+      "cwork:liveCoverage": {
+        "@type": "xsd:boolean",
+        "@value": "false"
+      },
+      "cwork:mentions": {
+        "@id": "geonames:3304781/"
+      },
+      "cwork:primaryFormat": [
+        {
+          "@id": "cwork:TextualFormat"
+        },
+        {
+          "@id": "cwork:InteractiveFormat"
+        }
+      ],
+      "cwork:shortTitle": " sulfur explicates suggested anesthetics grimmer interpersonal stockholder obtruding bloomer piercing.",
+      "cwork:thumbnail": {
+        "@id": "bbct:2055022483"
+      },
+      "cwork:title": "Clay Telecom dreams disqualifications drinkable misguides semiprivate situates revolved vindictiveness colonials pinup."
+    }
+  ],
+  "id": "bbcc:1646446#id",
+  "@context": {
+    "id" : "@id",
+    "bbcevent": "http://www.bbc.co.uk/ontologies/event/",
+    "bbcwebDocumentType": "http://www.bbc.co.uk/ontologies/bbc/webDocumentType",
+    "geo-pos": "http://www.w3.org/2003/01/geo/wgs84_pos#",
+    "bbc": "http://www.bbc.co.uk/ontologies/bbc/",
+    "time": "http://www.w3.org/2006/time#",
+    "event": "http://purl.org/NET/c4dm/event.owl#",
+    "music-ont": "http://purl.org/ontology/mo/",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "provenance": "http://www.bbc.co.uk/ontologies/provenance/",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "cms": "http://www.bbc.co.uk/ontologies/cms/",
+    "news": "http://www.bbc.co.uk/ontologies/news/",
+    "cnews": "http://www.bbc.co.uk/ontologies/news/cnews/",
+    "cconcepts": "http://www.bbc.co.uk/ontologies/coreconcepts/",
+    "dbp-prop": "http://dbpedia.org/property/",
+    "geonames": "http://sws.geonames.org/",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "domain": "http://www.bbc.co.uk/ontologies/domain/",
+    "dbpedia": "http://dbpedia.org/resource/",
+    "geo-ont": "http://www.geonames.org/ontology#",
+    "bbc-pont": "http://purl.org/ontology/po/",
+    "tagging": "http://www.bbc.co.uk/ontologies/tagging/",
+    "sport": "http://www.bbc.co.uk/ontologies/sport/",
+    "skosCore": "http://www.w3.org/2004/02/skos/core#",
+    "dbp-ont": "http://dbpedia.org/ontology/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "core": "http://www.bbc.co.uk/ontologies/coreconcepts/",
+    "curric": "http://www.bbc.co.uk/ontologies/curriculum/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "cwork": "http://www.bbc.co.uk/ontologies/creativework/",
+    "fb": "http://rdf.freebase.com/ns/",
+    "ot": "http://www.ontotext.com/",
+    "ldbcspb": "http://www.ldbcouncil.org/spb#",
+    "bbcd": "http://www.bbc.co.uk/document/",
+    "bbcc": "http://www.bbc.co.uk/context/",
+    "bbct": "http://www.bbc.co.uk/thumbnail/"
+  }
+}

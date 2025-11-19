@@ -1,0 +1,117 @@
+{
+  "@graph": [
+    {
+      "id": "http://www.bbc.co.uk/things/1646453#id",
+      "@type": "cwork:BlogPost",
+      "bbc:primaryContentOf": [
+        {
+          "@id": "bbcd:269723#id",
+          "bbcwebDocumentType": {
+            "@id": "bbc:HighWeb"
+          }
+        },
+        {
+          "@id": "bbcd:269724#id",
+          "bbcwebDocumentType": {
+            "@id": "bbc:Mobile"
+          }
+        }
+      ],
+      "cwork:about": [
+        {
+          "@id": "dbpedia:Brasserie_du_Bocq"
+        },
+        {
+          "@id": "dbpedia:Gunsynd_Mile"
+        },
+        {
+          "@id": "dbpedia:Everett_A._Kelly"
+        },
+        {
+          "@id": "dbpedia:Robert_Adamson_(photographer)"
+        },
+        {
+          "@id": "dbpedia:James_Scripps_Booth"
+        },
+        {
+          "@id": "dbpedia:Melissa_Sargent_(legislator)"
+        },
+        {
+          "@id": "dbpedia:Raymond_Duc"
+        }
+      ],
+      "cwork:altText": "thumbnail atlText for CW http://www.bbc.co.uk/context/1646453#id",
+      "cwork:audience": {
+        "@id": "cwork:InternationalAudience"
+      },
+      "cwork:category": {
+        "@id": "http://www.bbc.co.uk/category/Persons"
+      },
+      "cwork:dateCreated": {
+        "@type": "xsd:dateTime",
+        "@value": "2011-08-18T22:16:37.121+03:00"
+      },
+      "cwork:dateModified": {
+        "@type": "xsd:dateTime",
+        "@value": "2011-10-27T03:14:07.312+03:00"
+      },
+      "cwork:description": " blinkered boardinghouses transacting sprayed lavenders tabled lettered grouse backups ovule exigencies filter circumcisions keratin lasts.",
+      "cwork:liveCoverage": {
+        "@type": "xsd:boolean",
+        "@value": "false"
+      },
+      "cwork:mentions": {
+        "@id": "geonames:3105916/"
+      },
+      "cwork:primaryFormat": {
+        "@id": "cwork:TextualFormat"
+      },
+      "cwork:shortTitle": " abash unfashionable frigid afterthoughts leitmotif moneymakers tactician narrow imprudent pyrotechnic.",
+      "cwork:thumbnail": {
+        "@id": "bbct:1117075629"
+      },
+      "cwork:title": "Artyom Igorevich Ivanov gristlier distillery converge gauged derailments hood deprogramming protectorate courtly yoked."
+    }
+  ],
+  "id": "bbcc:1646453#id",
+  "@context": {
+    "id" : "@id",
+    "bbcevent": "http://www.bbc.co.uk/ontologies/event/",
+    "bbcwebDocumentType": "http://www.bbc.co.uk/ontologies/bbc/webDocumentType",
+    "geo-pos": "http://www.w3.org/2003/01/geo/wgs84_pos#",
+    "bbc": "http://www.bbc.co.uk/ontologies/bbc/",
+    "time": "http://www.w3.org/2006/time#",
+    "event": "http://purl.org/NET/c4dm/event.owl#",
+    "music-ont": "http://purl.org/ontology/mo/",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "provenance": "http://www.bbc.co.uk/ontologies/provenance/",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "cms": "http://www.bbc.co.uk/ontologies/cms/",
+    "news": "http://www.bbc.co.uk/ontologies/news/",
+    "cnews": "http://www.bbc.co.uk/ontologies/news/cnews/",
+    "cconcepts": "http://www.bbc.co.uk/ontologies/coreconcepts/",
+    "dbp-prop": "http://dbpedia.org/property/",
+    "geonames": "http://sws.geonames.org/",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "domain": "http://www.bbc.co.uk/ontologies/domain/",
+    "dbpedia": "http://dbpedia.org/resource/",
+    "geo-ont": "http://www.geonames.org/ontology#",
+    "bbc-pont": "http://purl.org/ontology/po/",
+    "tagging": "http://www.bbc.co.uk/ontologies/tagging/",
+    "sport": "http://www.bbc.co.uk/ontologies/sport/",
+    "skosCore": "http://www.w3.org/2004/02/skos/core#",
+    "dbp-ont": "http://dbpedia.org/ontology/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "core": "http://www.bbc.co.uk/ontologies/coreconcepts/",
+    "curric": "http://www.bbc.co.uk/ontologies/curriculum/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "cwork": "http://www.bbc.co.uk/ontologies/creativework/",
+    "fb": "http://rdf.freebase.com/ns/",
+    "ot": "http://www.ontotext.com/",
+    "ldbcspb": "http://www.ldbcouncil.org/spb#",
+    "bbcd": "http://www.bbc.co.uk/document/",
+    "bbcc": "http://www.bbc.co.uk/context/",
+    "bbct": "http://www.bbc.co.uk/thumbnail/"
+  }
+}
