@@ -178,8 +178,9 @@ public class MongoResultIterator extends StatementIterator {
 				loadBatchedData();
 				storeIterator = batchDocumentStore.getIterator();
 				this.currentRDF = batchDocumentStore.getData();
+				return batchDocumentStore.size() > 0;
 			}
-			return batchDocumentStore.size() > 0;
+			return false;
 		}
 		return iter != null && iter.hasNext();
 	}
