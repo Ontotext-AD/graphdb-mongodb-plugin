@@ -86,6 +86,7 @@ public class MongoResultIterator extends StatementIterator {
 	private int documentsLimit;
 	private BatchDocumentStore batchDocumentStore;
 	private LongIterator storeIterator;
+	private IdFinder idFinder;
 
   static {
 		GraphDBJSONLD11ParserFactory jsonldFactory = new GraphDBJSONLD11ParserFactory();
@@ -105,6 +106,7 @@ public class MongoResultIterator extends StatementIterator {
 		jsonLdParserConfig = new ParserConfig();
 		documentLoader = new CachingDocumentLoader();
 		jsonLdParserConfig.set(GraphDBJSONLDSettings.DOCUMENT_LOADER, documentLoader);
+		idFinder = new IdFinder(plugin);
 	}
 
 	@Override
@@ -286,34 +288,7 @@ public class MongoResultIterator extends StatementIterator {
 			return 0;
 		}
 		
-		String entity = null;
-		if (doc.containsKey(GRAPH)) {
-			Object item = doc.get(GRAPH);
-			Document graphDoc;
-			if (item != null) {
-				if (item instanceof List<?> listItem) {
-					if (!listItem.isEmpty() && listItem.getFirst() instanceof Document document) {
-						graphDoc = document;
-						entity = graphDoc.getString(ID);
-						if (listItem.size() > 1) {
-							plugin.getLogger().warn("Multiple graphs in mongo document. Selecting the first one for entity:	" + entity);
-						}
-					} else {
-						plugin.getLogger().warn("Value of @graph must be a valid document in mongo document.");
-					}
-				} else if (item instanceof Document document) {
-					graphDoc = document;
-					entity = graphDoc.getString(ID);
-				} else {
-					plugin.getLogger().warn("@graph must be a document or list of documents in mongo document.");
-				}
-			}
-		}
-		if (entity == null) {
-			// the document didn't contain @graph node or the node didn't have correct structure
-			// or @id has not been found
-			entity = doc.getString(ID);
-		}
+		String entity = idFinder.extractRootUri(doc);
 		String docBase = null;
 		// if the current document contains a local @ use it to resolve the relative entities
 		// otherwise resolve the @base from the given context if present
@@ -336,6 +311,10 @@ public class MongoResultIterator extends StatementIterator {
 			JsonWriterSettings jsonWriterSettings = JsonWriterSettings.builder().outputMode(JsonMode.RELAXED).build();
 			EncoderWrapper encoderWrapper = new EncoderWrapper(new DocumentCodec());
 			String json = doc.toJson(jsonWriterSettings, encoderWrapper);
+
+			if (entity == null) {
+				entity = idFinder.extractRootUri(json);
+			}
 			StringReader reader = new StringReader(json);
 
 			currentRDF = Rio.parse(reader, docBase, RDFFormat.JSONLD, jsonLdParserConfig,
