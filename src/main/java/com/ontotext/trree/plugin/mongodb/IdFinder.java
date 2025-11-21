@@ -80,23 +80,15 @@ public class IdFinder {
 
             // Expand the Pruned Document
             JsonArray expanded = JsonLd.expand(JsonDocument.of(prunedRoot)).get();
-            System.out.println("Expanded JSON " + expanded.toString());
 
             if (expanded.isEmpty()) return null;
 
             // The first item in the expanded list corresponds to the input root object
             JsonObject mainNode = expanded.getJsonObject(0);
-
-            // if (mainNode.containsKey("@id")) {
-            //     return mainNode.getString("@id");
-            // }
             return extractRootUri(mainNode);
-
-            //return null; 
-
         } catch (Exception e) {
 			plugin.getLogger().warn("Exception while trying to find root ID by expanding the JSON-LD document", e);
-            throw new RuntimeException("Failed to find root ID", e);
+            return null;
         }
     }
 
