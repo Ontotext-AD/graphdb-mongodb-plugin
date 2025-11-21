@@ -26,6 +26,13 @@ public class IdFinder {
         return obj.toString();
     }
 
+
+    /** Extracts the root URI from a JSON-LD document represented as a Map (original BSON doc).
+     * Looks for <code>@graph</code> first, then for <code>@id</code> at the root level.
+     * 
+     * @param doc The JSON-LD document as a Map.
+     * @return The extracted root URI, or null if not found.
+     */
 	public String extractRootUri(Map<String, ? extends Object> doc) {
 		String uri = null;
 		if (doc.containsKey(GRAPH)) {
@@ -62,6 +69,13 @@ public class IdFinder {
     // Depth 2 = _id -> $oid
     private static final int MAX_DEPTH = 3;
 
+    /** Extracts the root URI from a JSON-LD document represented as a JSON string after performing 
+     * JSON-LD expansion. This method prunes deep structures before JSON-LD expansion to improve performance.
+     * It allows to find the <code>@id</code> in cases where it is calculated via context expansion.
+     * 
+     * @param json The JSON-LD document as a string.
+     * @return The extracted root URI, or null if not found.
+     */
     public String extractRootUri(String json) {
         try (StringReader reader = new StringReader(json);
              JsonParser parser = Json.createParser(reader)) {
