@@ -86,6 +86,7 @@ public class MongoResultIterator extends StatementIterator {
 	private int documentsLimit;
 	private BatchDocumentStore batchDocumentStore;
 	private LongIterator storeIterator;
+	private IdFinder idFinder;
 
   static {
 		GraphDBJSONLD11ParserFactory jsonldFactory = new GraphDBJSONLD11ParserFactory();
@@ -105,6 +106,7 @@ public class MongoResultIterator extends StatementIterator {
 		jsonLdParserConfig = new ParserConfig();
 		documentLoader = new CachingDocumentLoader();
 		jsonLdParserConfig.set(GraphDBJSONLDSettings.DOCUMENT_LOADER, documentLoader);
+		idFinder = new IdFinder(plugin);
 	}
 
 	@Override
@@ -176,8 +178,9 @@ public class MongoResultIterator extends StatementIterator {
 				loadBatchedData();
 				storeIterator = batchDocumentStore.getIterator();
 				this.currentRDF = batchDocumentStore.getData();
+				return batchDocumentStore.size() > 0;
 			}
-			return batchDocumentStore.size() > 0;
+			return false;
 		}
 		return iter != null && iter.hasNext();
 	}
@@ -286,34 +289,7 @@ public class MongoResultIterator extends StatementIterator {
 			return 0;
 		}
 		
-		String entity = null;
-		if (doc.containsKey(GRAPH)) {
-			Object item = doc.get(GRAPH);
-			Document graphDoc;
-			if (item != null) {
-				if (item instanceof List<?> listItem) {
-					if (!listItem.isEmpty() && listItem.getFirst() instanceof Document document) {
-						graphDoc = document;
-						entity = graphDoc.getString(ID);
-						if (listItem.size() > 1) {
-							plugin.getLogger().warn("Multiple graphs in mongo document. Selecting the first one for entity:	" + entity);
-						}
-					} else {
-						plugin.getLogger().warn("Value of @graph must be a valid document in mongo document.");
-					}
-				} else if (item instanceof Document document) {
-					graphDoc = document;
-					entity = graphDoc.getString(ID);
-				} else {
-					plugin.getLogger().warn("@graph must be a document or list of documents in mongo document.");
-				}
-			}
-		}
-		if (entity == null) {
-			// the document didn't contain @graph node or the node didn't have correct structure
-			// or @id has not been found
-			entity = doc.getString(ID);
-		}
+		String entity = idFinder.extractRootUri(doc);
 		String docBase = null;
 		// if the current document contains a local @ use it to resolve the relative entities
 		// otherwise resolve the @base from the given context if present
@@ -336,6 +312,10 @@ public class MongoResultIterator extends StatementIterator {
 			JsonWriterSettings jsonWriterSettings = JsonWriterSettings.builder().outputMode(JsonMode.RELAXED).build();
 			EncoderWrapper encoderWrapper = new EncoderWrapper(new DocumentCodec());
 			String json = doc.toJson(jsonWriterSettings, encoderWrapper);
+
+			if (entity == null) {
+				entity = idFinder.extractRootUri(json);
+			}
 			StringReader reader = new StringReader(json);
 
 			currentRDF = Rio.parse(reader, docBase, RDFFormat.JSONLD, jsonLdParserConfig,
@@ -459,10 +439,34 @@ public class MongoResultIterator extends StatementIterator {
 	}
 
 	protected boolean hasSolution() {
-		if (batched && !batchedLoading) {
-			return !interrupted && storeIterator != null && storeIterator.hasNext();
+		if (interrupted) {
+			return false;
 		}
-		return !interrupted && iter != null && iter.hasNext();
+		if (batched && !batchedLoading) {
+			if (storeIterator != null && storeIterator.hasNext()) {
+				return true;
+			}
+			return loadNextBatch();
+		}
+		return iter != null && iter.hasNext();
+	}
+
+	/**
+	 * Load the next batch of documents when batch iteration requests more results.
+	 */
+	private boolean loadNextBatch() {
+		if (iter == null || !iter.hasNext()) {
+			return false;
+		}
+		if (batchDocumentStore == null) {
+			batchDocumentStore = new BatchDocumentStore();
+		} else {
+			batchDocumentStore.clear();
+		}
+		loadBatchedData();
+		storeIterator = batchDocumentStore.getIterator();
+		this.currentRDF = batchDocumentStore.getData();
+		return storeIterator != null && storeIterator.hasNext();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -512,60 +516,66 @@ public class MongoResultIterator extends StatementIterator {
 
 			@Override
 			public boolean next() {
-				if (currentRDF == null) {
-					if (!initialized && !initializedByEntityIterator) {
-						if (!isQuerySet()) {
-							return false;
-						}
-						initializedByEntityIterator = true;
-						if (initialize()) {
-							advance();
+				while (true) {
+					if (currentRDF == null) {
+						if (!initialized && !initializedByEntityIterator) {
+							if (!isQuerySet()) {
+								return false;
+							}
+							initializedByEntityIterator = true;
+							if (initialize()) {
+								advance();
+							} else {
+								// no solutions were found or could not connect
+								return false;
+							}
 						} else {
-							// no solutions were found or could not connect
-							return false;
-						}
-					} else {
-						if (hasSolution()) {
-							advance();
-						} else {
-							// no more solutions
-							return false;
+							if (hasSolution()) {
+								advance();
+							} else {
+								// no more solutions
+								return false;
+							}
 						}
 					}
-				}
-				if (local == null) {
-					// see the comment above
-					Resource localSub = s;
-					if (localSub == null && batched) {
-						localSub = (Resource) entities.get(MongoResultIterator.this.object);
-						if (localSub != null && localSub.equals(o)) {
-							localSub = null;
+					if (local == null) {
+						// see the comment above
+						Resource localSub = s;
+						if (localSub == null && batched) {
+							localSub = (Resource) entities.get(MongoResultIterator.this.object);
+							if (localSub != null && localSub.equals(o)) {
+								localSub = null;
+							}
 						}
+						local = currentRDF.filter(localSub, p, o).iterator();
 					}
-					local = currentRDF.filter(localSub, p, o).iterator();
+					if (local.hasNext()) {
+						Statement st = local.next();
+						this.subject = entities.resolve(st.getSubject());
+						if (this.subject == 0) {
+							this.subject = entities.put(st.getSubject(), Scope.REQUEST);
+						}
+						this.predicate = entities.resolve(st.getPredicate());
+						if (this.predicate == 0) {
+							this.predicate = entities.put(st.getPredicate(), Scope.REQUEST);
+						}
+						this.object = entities.resolve(st.getObject());
+						if (this.object == 0) {
+							this.object = entities.put(st.getObject(), Scope.REQUEST);
+						}
+						return true;
+					}
+
+					// currentRDF exhausted, try next document/batch
+					local = null;
+					if (entityIteratorCreated) {
+						return false;
+					}
+					if (!hasSolution()) {
+						return false;
+					}
+					advance();
 				}
-				boolean has = local.hasNext();
-//				if (!has && hasSolution()) {
-//					advance();
-//					local = currentRDF.filter(s, p, o).iterator();
-//					has = local.hasNext();
-//				}
-				if (has) {
-					Statement st = local.next();
-					this.subject = entities.resolve(st.getSubject());
-					if (this.subject == 0) {
-						this.subject = entities.put(st.getSubject(), Scope.REQUEST);
-					}
-					this.predicate = entities.resolve(st.getPredicate());
-					if (this.predicate == 0) {
-						this.predicate = entities.put(st.getPredicate(), Scope.REQUEST);
-					}
-					this.object = entities.resolve(st.getObject());
-					if (this.object == 0) {
-						this.object = entities.put(st.getObject(), Scope.REQUEST);
-					}
-				}
-				return has;
 			}
 
 			@Override
@@ -727,18 +737,6 @@ public class MongoResultIterator extends StatementIterator {
 
 	public boolean isClosed() {
 		return closed;
-	}
-
-	protected void reset() {
-		query = null;
-		aggregation = null;
-		projection = null;
-		hint = null;
-		modelIteratorCreated = false;
-		entityIteratorCreated = false;
-		if (batched) {
-			batchDocumentStore.clear();
-		}
 	}
 
 	public boolean isCloned() {

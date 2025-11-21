@@ -176,43 +176,31 @@ public class MongoDBPlugin extends PluginBase implements Preprocessor, PatternIn
 							 RequestContext requestContext) {
 
 		ContextImpl ctx = (requestContext instanceof ContextImpl) ? (ContextImpl) requestContext : null;
-		if (predicate == rdf_type) {
-			if (ctx != null && ctx.iters != null && object != 0 && object != Entities.BOUND) {
-				String suffix = Utils.matchPrefix(
-								pluginConnection.getEntities().get(object).stringValue(), NAMESPACE_INST);
-				if (suffix != null && suffix.length() > 0) {
-					return 0.3;
+		double base = 1.2; 
+		if (predicate == rdf_type) return base + 0.01;
+		if (predicate == queryId) {
+			return (object == 0 ? base + 10 : base + 0.02);
+		}
+		if (predicate == projectionId) return base + 0.03;
+		if (predicate == aggregationId) return base + 0.04;
+		if (predicate == hintId) return base + 0.05;
+		if (predicate == collationId) return base + 0.06;
+		if (predicate == batchSize) return base + 0.07;
+		if (predicate == entityId) {
+			if (ctx != null && ctx.iters != null) {
+				for (MongoResultIterator it : ctx.iters) {
+					if (!it.isQuerySet()) {
+						return base + 20.0;
+					}
 				}
 			}
+			return base + 0.08;
 		}
 		if (predicate == graphId) {
-			return 0.35;
+			return base + 0.09;
 		}
-		if (predicate == batchSize) {
-			return 0.37;
-		}
-		if (predicate == aggregationId) {
-			return 0.39;
-		}
-		if (predicate == queryId) {
-			return 0.43;
-		}
-		if (predicate == collationId) {
-			return 0.45;
-		}
-		if (predicate == projectionId) {
-			return 0.46;
-		}
-		if (predicate == hintId) {
-			return 0.49;
-		}
-		if (predicate == entityId) {
-			return 0.52;
-		}
-		if (ctx != null && ctx.iters != null && ctx.getContexts().contains(context)) {
-			return 0.6;
-		}
-		return 0;
+		if (ctx != null && ctx.iters != null && ctx.getContexts().contains(context)) return base + 0.10;
+		return base + 0.11; 
 	}
 
 	@Override

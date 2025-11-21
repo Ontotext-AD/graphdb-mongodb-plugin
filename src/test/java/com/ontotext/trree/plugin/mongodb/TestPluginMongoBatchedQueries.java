@@ -106,6 +106,7 @@ public class TestPluginMongoBatchedQueries extends AbstractMongoBasicTest {
 
   @Test
   public void testEntityLinkedVariable() throws Exception {
+    // with batch size 1 the result should be the same as if no batching is used (we get one by one all docs)
     query = "PREFIX mongodb-index: <http://www.ontotext.com/connectors/mongodb/instance#>\n"
             + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
             + "PREFIX mongodb: <http://www.ontotext.com/connectors/mongodb#>\n"

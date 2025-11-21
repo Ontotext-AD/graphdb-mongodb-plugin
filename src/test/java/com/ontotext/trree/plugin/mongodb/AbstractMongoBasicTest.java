@@ -385,7 +385,7 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 	}
 
 	protected String getServiceName() {
-		return "mongodb://localhost:" + mongoProcess.getConfig().net().getPort();
+		return "mongodb://localhost:" + mongoProcess.getServerAddress().getPort();
 	}
 
 }

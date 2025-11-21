@@ -4,7 +4,11 @@ import com.ontotext.test.utils.StandardUtils;
 import org.eclipse.rdf4j.repository.config.RepositoryConfig;
 import org.junit.Test;
 
-public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
+/**
+ * The same as estPluginMongoBasicQueriesBatched but using 'id' field instead of '@id' in source documents.
+ * The conversion id -> @id is resolved by JSON-LD context ("id" : "@id").
+ */
+public class TestPluginMongoBasicQueriesBatchedNoID extends AbstractMongoBasicTest {
 
     @Override
     protected void loadData() {
@@ -19,7 +23,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 "select ?s ?o {\n"
                 + "\t?search a inst:spb100 ;\n"
                 + "\t:batchSize \"10\" ;\n"
-                + "\t:find \"{'@id' : 'bbcc:1646461#id'}\" ;"
+                + "\t:find \"{'id' : 'bbcc:1646461#id'}\" ;"
                 + "\t:entity ?entity .\n"
                 + "\tgraph inst:spb100 {\n"
                 + "\t\t?s <http://www.bbc.co.uk/ontologies/creativework/about> ?o .\n"
@@ -34,11 +38,11 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
         query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
                 "PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
                 "select ?s ?o {\n"
-                + "\tVALUES ?query {\"{'@id' : 'bbcc:1646461#id'}\"}."
+                + "\tVALUES ?query {\"{'id' : 'bbcc:1646461#id'}\"}."
                 + "\t?search a inst:spb100 ;\n"
                 + "\t:batchSize \"10\" ;\n"
                 + "\t:find	?query;"
-                + "\t:project '{ \"@context\": 1, \"cwork:about\": 1, \"@type\": 1, \"@id\" : 1, \"@graph\" : 1 }' ;"
+                + "\t:project '{ \"@context\": 1, \"cwork:about\": 1, \"@type\": 1, \"id\" : 1, \"@graph\" : 1 }' ;"
                 + "\t:entity ?entity .\n"
                 + "\tgraph inst:spb100 {\n"
                 + "\t\t?s <http://www.bbc.co.uk/ontologies/creativework/about> ?o .\n"
@@ -53,11 +57,11 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
         query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
                 "PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
                 "select ?s ?o {\n"
-                + "BIND(\"{'@id' : 'bbcc:1646461#id'}\" as ?query)."
+                + "BIND(\"{'id' : 'bbcc:1646461#id'}\" as ?query)."
                 + "\t?search a inst:spb100 ;\n"
                 + "\t:batchSize \"10\" ;\n"
                 + "\t:find	?query;"
-                + "\t:project '{ \"@context\": 1, \"cwork:about\": 1, \"@type\": 1, \"@id\" : 1, \"@graph\" : 1 }' ;"
+                + "\t:project '{ \"@context\": 1, \"cwork:about\": 1, \"@type\": 1, \"id\" : 1, \"@graph\" : 1 }' ;"
                 + "\t:entity ?entity .\n"
                 + "\tgraph inst:spb100 {\n"
                 + "\t\t?s <http://www.bbc.co.uk/ontologies/creativework/about> ?o .\n"
@@ -72,8 +76,8 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
         query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
                 "PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
                 "select ?s ?o {\n"
-                + "\tBIND(\"{'@id' : 'bbcc:1646461#id'}\" as ?query)."
-                + "\tBIND('{ \"@context\": 1, \"cwork:about\": 1, \"@type\": 1, \"@id\" : 1, \"@graph\" : 1 }' as ?projection)."
+                + "\tBIND(\"{'id' : 'bbcc:1646461#id'}\" as ?query)."
+                + "\tBIND('{ \"@context\": 1, \"cwork:about\": 1, \"@type\": 1, \"id\" : 1, \"@graph\" : 1 }' as ?projection)."
                 + "\t?search a inst:spb100 ;\n"
                 + "\t:batchSize \"10\" ;\n"
                 + "\t:find	?query ;"
@@ -92,12 +96,12 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
 		query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
 						"PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
 						"select ?s ?o {\n"
-						+ "BIND(\"{'@id' : 'bbcc:##ID###id'}\" as ?queryPattern)."
+						+ "BIND(\"{'id' : 'bbcc:##ID###id'}\" as ?queryPattern)."
 						+ "BIND(REPLACE(?queryPattern, '##ID##', '1646461') as ?query)."
 						+ "\t?search a inst:spb100 ;\n"
                         + "\t:batchSize \"10\" ;\n"
 						+ "\t:find	?query;"
-						+ "\t:project '{ \"@context\": 1, \"cwork:about\": 1, \"@type\": 1, \"@id\" : 1, \"@graph\" : 1 }' ;"
+						+ "\t:project '{ \"@context\": 1, \"cwork:about\": 1, \"@type\": 1, \"id\" : 1, \"@graph\" : 1 }' ;"
 						+ "\t:entity ?entity .\n"
 						+ "\tgraph inst:spb100 {\n"
 						+ "\t\t?s <http://www.bbc.co.uk/ontologies/creativework/about> ?o .\n"
@@ -115,7 +119,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "select distinct ?entity {\n"
                 + "\t?search a inst:spb100 ;\n"
                 + "\t:batchSize \"10\" ;\n"
-                + "\t:aggregate \"[{'$match': {}}, {'$sort': {'@id': 1}}, {'$limit': 2}]\" ;\n"
+                + "\t:aggregate \"[{'$match': {}}, {'$sort': {'id': 1}}, {'$limit': 2}]\" ;\n"
                 + "\t:entity ?entity .\n"
                 + "\tgraph inst:spb100 {\n"
                 + "\t\t?s ?p ?o .\n"
@@ -184,7 +188,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "GRAPH mongodb-index:spb100 {?s a ?o1}"
                 + "?search a mongodb-index:spb100 ;"
                 + ":batchSize \"10\" ;"
-                + ":find \"{'@id' : 'bbcc:1646461#id'}\" ;"
+                + ":find \"{'id' : 'bbcc:1646461#id'}\" ;"
                 + ":entity ?entity ."
                 + "}";
 
@@ -199,11 +203,11 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "SELECT ?s1 ?o1 ?s2 ?o2 WHERE {"
                 + "?search1 a mongodb-index:spb100 ;"
                 + ":batchSize \"10\" ;\n"
-                + ":find \"{'@id' : 'bbcc:1646461#id'}\" ;"
+                + ":find \"{'id' : 'bbcc:1646461#id'}\" ;"
                 + ":entity ?entity1 ."
                 + "?search2 a mongodb-index:spb100 ;"
                 + ":batchSize \"10\" ;\n"
-                + ":find \"{'@id' : 'bbcc:1646453#id'}\" ;"
+                + ":find \"{'id' : 'bbcc:1646453#id'}\" ;"
                 + ":graph mongodb-index:spb1001 ;"
                 + ":entity ?entity2 ."
                 + "GRAPH mongodb-index:spb100 {?s1 a ?o1}"
@@ -224,7 +228,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "GRAPH mongodb-index:spb500 {?s1 a ?o1}"
                 + "?search1 a mongodb-index:spb100 ;"
                 + ":batchSize \"10\" ;\n"
-                + ":find \"{'@id' : 'bbcc:1646461#id'}\" ;"
+                + ":find \"{'id' : 'bbcc:1646461#id'}\" ;"
                 + ":graph mongodb-index:spb500 ;"
                 + ":entity ?entity1 ."
                 + "}";
@@ -246,7 +250,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "						WHERE {\n"
                 + "								?search1 a mongodb-index:spb100 ;\n"
                 + "												 :batchSize \"10\" ;\n"
-                + "												 :find \"{'@id' : 'bbcc:1646461#id'}\" ;\n"
+                + "												 :find \"{'id' : 'bbcc:1646461#id'}\" ;\n"
                 + "												 :entity ?entity1 .\n"
                 + "								GRAPH mongodb-index:spb100 {\n"
                 + "										?s1 a ?o1\n"
@@ -259,7 +263,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "						WHERE {\n"
                 + "								?search2 a mongodb-index:spb100 ;\n"
                 + "												 :batchSize \"10\" ;\n"
-                + "												 :find \"{'@id' : 'bbcc:1646453#id'}\" ;\n"
+                + "												 :find \"{'id' : 'bbcc:1646453#id'}\" ;\n"
                 + "												 :entity ?entity2 .\n"
                 + "								GRAPH mongodb-index:spb100 {\n"
                 + "										?s2 a ?o2\n"
@@ -289,7 +293,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "								}\n"
                 + "								?search1 a mongodb-index:spb100 ;\n"
                 + "												 :batchSize \"10\" ;\n"
-                + "												 :find \"{'@id' : 'bbcc:1646461#id'}\" ;\n"
+                + "												 :find \"{'id' : 'bbcc:1646461#id'}\" ;\n"
                 + "												 :graph mongodb-index:spb500 ;\n"
                 + "												 :entity ?entity1 .\n"
                 + "						}\n"
@@ -303,7 +307,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "								}\n"
                 + "								?search2 a mongodb-index:spb100 ;\n"
                 + "												 :batchSize \"10\" ;\n"
-                + "												 :find \"{'@id' : 'bbcc:1646453#id'}\" ;\n"
+                + "												 :find \"{'id' : 'bbcc:1646453#id'}\" ;\n"
                 + "												 :graph mongodb-index:spb600 ;\n"
                 + "												 :entity ?entity2 .\n"
                 + "						}\n"
@@ -331,7 +335,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "								}\n"
                 + "								?search1 a mongodb-index:spb100 ;\n"
                 + "									:batchSize \"10\" ;\n"
-                + "									:find \"{'@id' : 'bbcc:1646461#id'}\" ;\n"
+                + "									:find \"{'id' : 'bbcc:1646461#id'}\" ;\n"
                 + "									:entity ?entity1 .\n"
                 + "						}\n"
                 + "				} \n"
@@ -344,7 +348,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "								}\n"
                 + "								?search2 a mongodb-index:spb100 ;\n"
                 + "										:batchSize \"10\" ;\n"
-                + "										:find \"{'@id' : 'bbcc:1646453#id'}\" ;\n"
+                + "										:find \"{'id' : 'bbcc:1646453#id'}\" ;\n"
                 + "										:entity ?entity2 .\n"
                 + "						}\n"
                 + "				}\n"
@@ -368,7 +372,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "								}\n"
                 + "								?search1 a mongodb-index:spb100 ;\n"
                 + "										:batchSize \"10\" ;\n"
-                + "										:find \"{'@id' : 'bbcc:1646461#id'}\" ;\n"
+                + "										:find \"{'id' : 'bbcc:1646461#id'}\" ;\n"
                 + "										:entity ?entity1 .\n"
                 + "		} UNION {\n"
                 + "								GRAPH mongodb-index:spb100 {\n"
@@ -376,7 +380,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "								}\n"
                 + "								?search2 a mongodb-index:spb100 ;\n"
                 + "										:batchSize \"10\" ;\n"
-                + "										:find \"{'@id' : 'bbcc:1646453#id'}\" ;\n"
+                + "										:find \"{'id' : 'bbcc:1646453#id'}\" ;\n"
                 + "										:entity ?entity2 .\n"
                 + "		}\n"
                 + "}";
@@ -398,7 +402,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "								}\n"
                 + "								?search1 a mongodb-index:spb100 ;\n"
                 + "										:batchSize \"10\" ;\n"
-                + "										:find \"{'@id' : 'bbcc:1646461#id'}\" ;\n"
+                + "										:find \"{'id' : 'bbcc:1646461#id'}\" ;\n"
                 + "										:graph mongodb-index:spb500 ;\n"
                 + "										:entity ?entity1 .\n"
                 + "		} UNION {\n"
@@ -407,7 +411,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "								}\n"
                 + "								?search2 a mongodb-index:spb100 ;\n"
                 + "										:batchSize \"10\" ;\n"
-                + "										:find \"{'@id' : 'bbcc:1646453#id'}\" ;\n"
+                + "										:find \"{'id' : 'bbcc:1646453#id'}\" ;\n"
                 + "										:graph mongodb-index:spb600 ;\n"
                 + "										:entity ?entity2 .\n"
                 + "		}\n"
@@ -427,7 +431,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "		{\n"
                 + "								?search1 a mongodb-index:spb100 ;\n"
                 + "										:batchSize \"10\" ;\n"
-                + "										:find \"{'@id' : 'bbcc:1646461#id'}\" ;\n"
+                + "										:find \"{'id' : 'bbcc:1646461#id'}\" ;\n"
                 + "										:entity ?entity1 .\n"
                 + "								GRAPH mongodb-index:spb100 {\n"
                 + "										?s1 a ?o1\n"
@@ -435,7 +439,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "		} UNION {\n"
                 + "								?search2 a mongodb-index:spb100 ;\n"
                 + "										:batchSize \"10\" ;\n"
-                + "										:find \"{'@id' : 'bbcc:1646453#id'}\" ;\n"
+                + "										:find \"{'id' : 'bbcc:1646453#id'}\" ;\n"
                 + "										:entity ?entity2 .\n"
                 + "								GRAPH mongodb-index:spb100 {\n"
                 + "										?s2 a ?o2\n"
@@ -457,7 +461,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "		{\n"
                 + "								?search1 a mongodb-index:spb100 ;\n"
                 + "										:batchSize \"10\" ;\n"
-                + "										:find \"{'@id' : 'bbcc:1646461#id'}\" ;\n"
+                + "										:find \"{'id' : 'bbcc:1646461#id'}\" ;\n"
                 + "										:graph mongodb-index:spb500 ;\n"
                 + "										:entity ?entity1 .\n"
                 + "								GRAPH mongodb-index:spb500 {\n"
@@ -466,7 +470,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "		} UNION {\n"
                 + "								?search2 a mongodb-index:spb100 ;\n"
                 + "										:batchSize \"10\" ;\n"
-                + "										:find \"{'@id' : 'bbcc:1646453#id'}\" ;\n"
+                + "										:find \"{'id' : 'bbcc:1646453#id'}\" ;\n"
                 + "										:graph mongodb-index:spb600 ;\n"
                 + "										:entity ?entity2 .\n"
                 + "								GRAPH mongodb-index:spb600 {\n"
@@ -489,7 +493,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "WHERE {\n"
                 + "								?search1 a mongodb-index:spb100 ;\n"
                 + "										:batchSize \"10\" ;\n"
-                + "										:find \"{'@id' : 'bbcc:1646461#id'}\" ;\n"
+                + "										:find \"{'id' : 'bbcc:1646461#id'}\" ;\n"
                 + "										:graph mongodb-index:spb500 ;\n"
                 + "										:entity ?entity1 .\n"
                 + "								GRAPH mongodb-index:spb500 {\n"
@@ -520,7 +524,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "								}\n"
                 + "								?search1 a mongodb-index:spb100 ;\n"
                 + "										:batchSize \"10\" ;\n"
-                + "										:find \"{'@id' : 'bbcc:1646461#id'}\" ;\n"
+                + "										:find \"{'id' : 'bbcc:1646461#id'}\" ;\n"
                 + "										:entity ?entity1 .\n"
                 + "}";
 
@@ -544,7 +548,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "								}\n"
                 + "								?search1 a mongodb-index:spb100 ;\n"
                 + "										:batchSize \"10\" ;\n"
-                + "										:find \"{'@id' : 'bbcc:1646461#id'}\" ;\n"
+                + "										:find \"{'id' : 'bbcc:1646461#id'}\" ;\n"
                 + "										:graph mongodb-index:spb500 ;\n"
                 + "										:entity ?entity1 .\n"
                 + "}";
@@ -569,7 +573,7 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "								}\n"
                 + "								?search1 a mongodb-index:spb100 ;\n"
                 + "										:batchSize \"10\" ;\n"
-                + "										:find \"{'@id' : 'bbcc:1646461#id'}\" ;\n"
+                + "										:find \"{'id' : 'bbcc:1646461#id'}\" ;\n"
                 + "										:graph mongodb-index:spb500 ;\n"
                 + "										:entity ?entity1 .\n"
                 + "}";
@@ -597,12 +601,12 @@ public class TestPluginMongoBasicQueriesBatched extends AbstractMongoBasicTest {
                 + "								}\n"
                 + "								?search1 a mongodb-index:spb100 ;\n"
                 + "										:batchSize \"10\" ;\n"
-                + "										:find \"{'@id' : 'bbcc:1646461#id'}\" ;\n"
+                + "										:find \"{'id' : 'bbcc:1646461#id'}\" ;\n"
                 + "										:graph mongodb-index:spb500 ;\n"
                 + "										:entity ?entity1 .\n"
                 + "								?search2 a mongodb-index:spb100 ;\n"
                 + "										:batchSize \"10\" ;\n"
-                + "										:find \"{'@id' : 'bbcc:1646453#id'}\" ;\n"
+                + "										:find \"{'id' : 'bbcc:1646453#id'}\" ;\n"
                 + "										:graph mongodb-index:spb600 ;\n"
                 + "										:entity ?entity2 .\n"
                 + "}";
