@@ -439,13 +439,16 @@ public class MongoResultIterator extends StatementIterator {
 	}
 
 	protected boolean hasSolution() {
+		if (interrupted) {
+			return false;
+		}
 		if (batched && !batchedLoading) {
 			if (storeIterator != null && storeIterator.hasNext()) {
-				return !interrupted;
+				return true;
 			}
-			return !interrupted && loadNextBatch();
+			return loadNextBatch();
 		}
-		return !interrupted && iter != null && iter.hasNext();
+		return iter != null && iter.hasNext();
 	}
 
 	/**
@@ -734,20 +737,6 @@ public class MongoResultIterator extends StatementIterator {
 
 	public boolean isClosed() {
 		return closed;
-	}
-
-	protected void reset() {
-		query = null;
-		aggregation = null;
-		projection = null;
-		hint = null;
-		modelIteratorCreated = false;
-		entityIteratorCreated = false;
-		if (batched) {
-			if (batchDocumentStore != null) {
-				batchDocumentStore.clear();
-			}
-		}
 	}
 
 	public boolean isCloned() {
