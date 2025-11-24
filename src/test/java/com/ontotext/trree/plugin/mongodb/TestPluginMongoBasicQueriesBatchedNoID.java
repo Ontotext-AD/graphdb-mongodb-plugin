@@ -670,6 +670,44 @@ public class TestPluginMongoBasicQueriesBatchedNoID extends AbstractMongoBasicTe
         verifyUnorderedResult();
     }
 
+    @Test
+    public void testReverseProp() throws Exception {
+        query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
+                "PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
+                "PREFIX bbc: <http://www.bbc.co.uk/ontologies/bbc/>\r\n" +
+                "select ?current ?next {\n"
+                + "\t?search a inst:spb100 ;\n"
+                + "\t:batchSize \"10\" ;\n"
+                + "\t:find \"{'id' : 'bbcc:1646446#id'}\" ;"
+                + "\t:entity ?entity .\n"
+                + "\tgraph inst:spb100 {\n"
+                + "\t\t?next bbc:previous ?current .\n"
+                + "\t}\n"
+                + "}";
+
+        verifyUnorderedResult();
+    }
+
+    @Test
+    public void testReversePropLinkingAcrossDocuments() throws Exception {
+        query = "PREFIX : <http://www.ontotext.com/connectors/mongodb#>\r\n" +
+                "PREFIX inst: <http://www.ontotext.com/connectors/mongodb/instance#>\r\n" +
+                "PREFIX bbc: <http://www.bbc.co.uk/ontologies/bbc/>\r\n" +
+                "select ?current ?next ?na {\n"
+                + "\t?search a inst:spb100 ;\n"
+                + "\t:batchSize \"10\" ;\n"
+                + "\t:find \"{}\" ;"
+                + "\t:entity [] .\n"
+                + "\tgraph inst:spb100 {\n"
+                + "\t\t?next bbc:previous ?current .\n"
+                + "\t\t?next <http://www.bbc.co.uk/ontologies/creativework/audience> ?na .\n"
+                + "\t}\n"
+                + "}";
+
+        verifyUnorderedResult();
+    }
+
+
     @Override
     protected boolean isLearnMode() {
         return false;
