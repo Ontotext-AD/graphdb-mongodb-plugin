@@ -541,21 +541,13 @@ public class MongoResultIterator extends StatementIterator {
 					if (local == null) {
 						// see the comment above
 						Resource localSub = s;
-						Value currentEntity = null;
 						if (localSub == null && batched) {
-							currentEntity = entities.get(MongoResultIterator.this.object);
-							if (currentEntity instanceof Resource res) {
-								localSub = res.equals(o) ? null : res;
+							localSub = (Resource) entities.get(MongoResultIterator.this.object);
+							if (localSub != null && localSub.equals(o)) {
+								localSub = null;
 							}
 						}
 						local = currentRDF.filter(localSub, p, o).iterator();
-						// If we are driven by an entity iterator and looked for statements
-						// where the entity acts as subject but none exist, try the inverse
-						// direction where the entity is an object (e.g. reverse properties).
-						if (entityIteratorCreated && o == null && localSub != null && !local.hasNext()
-								&& currentEntity != null) {
-							local = currentRDF.filter(null, p, currentEntity).iterator();
-						}
 					}
 					if (local.hasNext()) {
 						Statement st = local.next();

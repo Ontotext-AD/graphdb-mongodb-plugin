@@ -70,10 +70,7 @@
       "cwork:thumbnail": {
         "@id": "bbct:1117075629"
       },
-      "cwork:title": "Artyom Igorevich Ivanov gristlier distillery converge gauged derailments hood deprogramming protectorate courtly yoked.",
-      "next": {
-        "@id": "http://www.bbc.co.uk/things/1646457#id"
-      }
+      "cwork:title": "Artyom Igorevich Ivanov gristlier distillery converge gauged derailments hood deprogramming protectorate courtly yoked."
     }
   ],
   "id": "bbcc:1646453#id",
@@ -115,7 +112,6 @@
     "ldbcspb": "http://www.ldbcouncil.org/spb#",
     "bbcd": "http://www.bbc.co.uk/document/",
     "bbcc": "http://www.bbc.co.uk/context/",
-    "bbct": "http://www.bbc.co.uk/thumbnail/",
-    "next": { "@reverse": "bbc:previous" }
+    "bbct": "http://www.bbc.co.uk/thumbnail/"
   }
 }
