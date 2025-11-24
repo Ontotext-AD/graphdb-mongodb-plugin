@@ -552,8 +552,8 @@ public class MongoResultIterator extends StatementIterator {
 						// If we are driven by an entity iterator and looked for statements
 						// where the entity acts as subject but none exist, try the inverse
 						// direction where the entity is an object (e.g. reverse properties).
-						if (entityIteratorCreated && object == 0 && localSub != null && !local.hasNext()
-								&& currentEntity instanceof Value) {
+						if (entityIteratorCreated && o == null && localSub != null && !local.hasNext()
+								&& currentEntity != null) {
 							local = currentRDF.filter(null, p, currentEntity).iterator();
 						}
 					}
