@@ -1,6 +1,7 @@
 package com.ontotext.trree.plugin.mongodb;
 
 import com.ontotext.test.functional.base.SingleRepositoryFunctionalTest;
+import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.mongo.transitions.Mongod;
 import de.flapdoodle.embed.mongo.transitions.RunningMongodProcess;
 import de.flapdoodle.reverse.TransitionWalker;
@@ -30,7 +31,7 @@ public abstract class AbstractMongoTest extends SingleRepositoryFunctionalTest {
 
 	protected static TransitionWalker.ReachedState<RunningMongodProcess> startMongod() {
 		try {
-			return Mongod.instance().start(de.flapdoodle.embed.mongo.distribution.Version.Main.V4_4);
+			return Mongod.instance().start(Version.Main.V6_0);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException("Failed to start MongoDB", e);
