@@ -224,7 +224,6 @@ public abstract class AbstractMongoBasicTest extends AbstractMongoTest {
 							.replace("^^<http://www.w3.org/2001/XMLSchema#string>", "");
 					os.write(bs.getBytes(StandardCharsets.UTF_8));
 					os.write("\n".getBytes(StandardCharsets.UTF_8));
-					System.out.println(bs);
 				}
 				os.flush();
 			}
