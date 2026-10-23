@@ -14,6 +14,7 @@ pipeline {
     KEEPER_NEXUS_RECORD = 'xRckZaBDxYhmpMgsaT4tCg'
     KEEPER_M2_SETTINGS_RECORD = 'keeper://w6o5mGXWgN7zNvrr6K7QGQ/file/settings.xml'
     KEEPER_NVD_API_KEY_RECORD = 'ejsvY-w_afWMP3gpKMJoOA'
+    CACHE_IMAGE = 'docker-registry.ontotext.com/mvn-dependency-check-cache:latest'
   }
 
   stages {
@@ -59,6 +60,23 @@ pipeline {
       }
     }
 
+    stage('Extract NVD DB from cache image') {
+      steps {
+        catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+          sh '''#!/usr/bin/env bash
+            set -euo pipefail
+            nvd_src="/root/.m2/repository/org/owasp/dependency-check-data"
+            mkdir -p "${WORKSPACE}/dependency-check-data"
+            docker pull "${CACHE_IMAGE}"
+            container_id=$(docker create "${CACHE_IMAGE}" true)
+            docker cp "${container_id}:${nvd_src}/." "${WORKSPACE}/dependency-check-data/"
+            docker rm -f "${container_id}"
+            ls -lh "${WORKSPACE}/dependency-check-data/"
+          '''
+        }
+      }
+    }
+
     stage('Dependency check') {
       steps {
     	withDockerContainer(image: 'docker-registry.ontotext.com/jenkins-builder:0.2-jdk25') {
@@ -69,6 +87,7 @@ pipeline {
              sh """
                mvn dependency-check:aggregate \\
                -DnvdApiKey="\$NVD_API_KEY_NOTE" \\
+               -DdataDirectory=${env.WORKSPACE}/dependency-check-data \\
                -Dmaven.repo.local=${env.WORKSPACE}/.m2/repository \\
                -s ${env.WORKSPACE}/.m2/settings.xml
        	     """
