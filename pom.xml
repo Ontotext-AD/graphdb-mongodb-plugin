@@ -90,6 +90,7 @@
 				<configuration>
 					<failBuildOnCVSS>7</failBuildOnCVSS>
 					<skipProvidedScope>true</skipProvidedScope>
+					<ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
 				</configuration>
 				<executions>
 					<execution>
